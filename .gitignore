@@ -1,0 +1,11 @@
+### class files ###
+*.class
+
+### VS Code ###
+.vscode/
+
+### Mac ###
+*.DS_Store
+
+### maven ###
+/target/
