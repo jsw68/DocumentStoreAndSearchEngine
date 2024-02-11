@@ -25,7 +25,18 @@ public class DocumentStoreImpl implements DocumentStore {
             previous = this.store.remove(uri);
 
         } else {
-            byte[] binaryData = input.readAllBytes();
+            byte[] binaryData;
+            try{
+                binaryData = input.readAllBytes();
+            }
+            catch (IOException e){
+                System.out.println(e);
+                throw new IOException(e);
+            }
+            finally{
+                input.close();
+            }
+            
             Document doc;
 
             switch (format) {
