@@ -1,9 +1,10 @@
-package edu.yu.cs.com1320.project.stage1;
+package edu.yu.cs.com1320.project.stage1.impl;
 
 import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import edu.yu.cs.com1320.project.stage1.Document;
 
 public class DocumentImpl implements Document {
     private URI uri;

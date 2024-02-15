@@ -4,10 +4,13 @@ package edu.yu.cs.com1320.project.stage1;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+
 import java.util.HashMap;
 import java.util.Map;
 import java.net.URI;
-
+import edu.yu.cs.com1320.project.stage1.impl.DocumentImpl;
 import org.junit.jupiter.api.BeforeEach;  
 
 public class DocumentTest {
@@ -72,4 +75,22 @@ public class DocumentTest {
         assertTrue(this.StringDoc.getMetadata().equals(this.stringmeta));
     }
 
+    @Test
+    public void constructorNullTest(){
+        // constructor string tests
+        assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(null, "txt"));
+        assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(URI.create("string"), "".getBytes()));
+        assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(URI.create("string"), ""));
+        assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(URI.create(""), "txt"));
+
+        // binary constructor tests
+        // assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(null, "txt"));
+        // assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(URI.create("string"), null));
+        // assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(URI.create("string"), "".getBytes()));
+        // assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(URI.create(""), "txt"));
+    }
+
+
+
+    
 }

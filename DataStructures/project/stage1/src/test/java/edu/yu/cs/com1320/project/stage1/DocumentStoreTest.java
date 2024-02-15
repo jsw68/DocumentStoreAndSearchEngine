@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import org.junit.jupiter.api.BeforeEach;  
 import java.net.URI;
+import edu.yu.cs.com1320.project.stage1.impl.DocumentStoreImpl;
+import edu.yu.cs.com1320.project.stage1.impl.DocumentImpl;
 
 
 public class DocumentStoreTest {

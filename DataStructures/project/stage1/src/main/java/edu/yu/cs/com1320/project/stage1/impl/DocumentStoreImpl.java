@@ -1,11 +1,12 @@
-package edu.yu.cs.com1320.project.stage1;
+package edu.yu.cs.com1320.project.stage1.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
-
+import edu.yu.cs.com1320.project.stage1.DocumentStore;
+import edu.yu.cs.com1320.project.stage1.Document;
 
 public class DocumentStoreImpl implements DocumentStore {
     private Map<URI, Document> store;
@@ -30,7 +31,7 @@ public class DocumentStoreImpl implements DocumentStore {
                 binaryData = input.readAllBytes();
             }
             catch (IOException e){
-                System.out.println(e);
+                // System.out.println(e);
                 throw new IOException(e);
             }
             finally{
