@@ -14,7 +14,7 @@ public class DocumentStoreImpl implements DocumentStore {
     public DocumentStoreImpl() {
         this.store = new HashMap<>();
     }
-
+    // close to 30 line limit. abstracted reading bytes out to reduce. 
     @Override
     public int put(InputStream input, URI uri, DocumentFormat format) throws IOException {
         if (uri == null || format == null || uri.toString().isEmpty()) {
@@ -24,22 +24,9 @@ public class DocumentStoreImpl implements DocumentStore {
         if (input == null) {
             // delete doc at URI
             previous = this.store.remove(uri);
-
         } else {
-            byte[] binaryData;
-            try{
-                binaryData = input.readAllBytes();
-            }
-            catch (IOException e){
-                // System.out.println(e);
-                throw new IOException(e);
-            }
-            finally{
-                input.close();
-            }
-            
+            byte[] binaryData = readBytes(input);
             Document doc;
-
             switch (format) {
                 case TXT:
                     doc = new DocumentImpl(uri, binaryData.toString());
@@ -92,5 +79,19 @@ public class DocumentStoreImpl implements DocumentStore {
             return false;
         }
         return true;
+    }
+
+    private byte[] readBytes(InputStream in) throws IOException{
+        byte[] binaryData;
+        try{
+            binaryData = in.readAllBytes();
+        }
+        catch (IOException e){
+            throw new IOException(e);
+        }
+        finally{
+            in.close();
+        }
+        return binaryData;
     }
 }
