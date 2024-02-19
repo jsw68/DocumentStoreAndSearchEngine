@@ -55,7 +55,8 @@ public class DocumentTest {
 
     @Test
     public void getDocumentTxtTest(){
-        assertTrue(this.StringDoc.getDocumentTxt().equals( "Stringdoc"));
+        assertTrue(this.StringDoc.getDocumentTxt().equals("Stringdoc"));
+        assertEquals(this.StringDoc.getDocumentTxt(),  "Stringdoc");
         assertTrue(this.ByteDoc.getDocumentTxt() == null);
     }
 
@@ -76,18 +77,23 @@ public class DocumentTest {
     }
 
     @Test
-    public void constructorNullTest(){
+    public void nullTest(){
         // constructor string tests
         assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(null, "txt"));
         assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(URI.create("string"), "".getBytes()));
         assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(URI.create("string"), ""));
         assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(URI.create(""), "txt"));
 
-        // binary constructor tests
-        // assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(null, "txt"));
-        // assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(URI.create("string"), null));
-        // assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(URI.create("string"), "".getBytes()));
-        // assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(URI.create(""), "txt"));
+        //setMetadataValue null tests
+        assertThrows(IllegalArgumentException.class, () -> this.StringDoc.setMetadataValue(null, "value"));
+        assertThrows(IllegalArgumentException.class, () -> this.StringDoc.setMetadataValue("", "value"));
+        //getMetadata null tests
+        assertThrows(IllegalArgumentException.class, () -> this.StringDoc.getMetadataValue(null));
+        assertThrows(IllegalArgumentException.class, () -> this.StringDoc.getMetadataValue(""));
+        //getMetadata null tests
+        assertThrows(IllegalArgumentException.class, () -> this.StringDoc.getMetadataValue(null));
+        assertThrows(IllegalArgumentException.class, () -> this.StringDoc.getMetadataValue(""));
+
     }
 
 

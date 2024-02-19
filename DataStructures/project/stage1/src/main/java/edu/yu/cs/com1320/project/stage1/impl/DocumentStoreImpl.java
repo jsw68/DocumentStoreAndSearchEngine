@@ -29,7 +29,7 @@ public class DocumentStoreImpl implements DocumentStore {
             Document doc;
             switch (format) {
                 case TXT:
-                    doc = new DocumentImpl(uri, binaryData.toString());
+                doc = new DocumentImpl(uri, new String(binaryData));
                     break;
                 case BINARY:
                     doc = new DocumentImpl(uri, binaryData);
@@ -54,7 +54,7 @@ public class DocumentStoreImpl implements DocumentStore {
         if (uri==null || uri.toString().isEmpty() || key==null || key.isEmpty()){
             throw new IllegalArgumentException();
         }
-        Document doc = this.store.get(key);
+        Document doc = this.store.get(uri);
         if (doc==null){
             throw new IllegalArgumentException();
         }
@@ -66,7 +66,7 @@ public class DocumentStoreImpl implements DocumentStore {
         if (uri==null || uri.toString().isEmpty() || key==null || key.isEmpty()){
             throw new IllegalArgumentException();
         }
-        Document doc = this.store.get(key);
+        Document doc = this.store.get(uri);
         if (doc==null){
             throw new IllegalArgumentException();
         }
