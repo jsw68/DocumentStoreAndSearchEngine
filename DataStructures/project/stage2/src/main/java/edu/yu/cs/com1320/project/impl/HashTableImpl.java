@@ -96,6 +96,9 @@ public class HashTableImpl<Key, Value> implements HashTable<Key, Value> {
     }
     @Override
     public Value put(Key k, Value v) {
+        if (k == null){
+            throw new IllegalArgumentException("Key cannot be null");
+        }
         int index = Math.abs(k.hashCode()) % 5;
         LinkedList list = this.hashTable[index];
         if (v == null){

@@ -4,6 +4,8 @@ import java.net.URI;
 import java.util.Arrays;
 import edu.yu.cs.com1320.project.impl.HashTableImpl;
 import edu.yu.cs.com1320.project.HashTable;
+import java.util.Set;
+import java.util.HashSet;
 import edu.yu.cs.com1320.project.stage2.Document;
 import java.lang.Math;
 public class DocumentImpl implements Document {
@@ -74,7 +76,13 @@ public class DocumentImpl implements Document {
     }
     @Override
     public HashTable<String, String> getMetadata(){
-        return this.meta;
+        Set<String> metaKeys = this.meta.keySet();
+        HashTable<String, String> meta = new HashTableImpl<>();
+        for (String key : metaKeys){
+            meta.put(key, this.meta.get(key));
+        }
+        return meta;
+        
     }
     @Override
     public String getDocumentTxt(){
