@@ -8,7 +8,10 @@ import java.lang.Math;
 import javax.swing.RowFilter.Entry;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.ArrayList;
+import java.util.List;
+
 public class HashTableImpl<Key, Value> implements HashTable<Key, Value> {
     private class Element<Key, Value> {
         private Key key;
@@ -71,8 +74,6 @@ public class HashTableImpl<Key, Value> implements HashTable<Key, Value> {
             // if next is the target
             current.next = next.next;
             return next.value;
-            
-
         }
     }
     private LinkedList<Key, Value>[] hashTable;
@@ -113,6 +114,9 @@ public class HashTableImpl<Key, Value> implements HashTable<Key, Value> {
     }
     @Override
     public boolean containsKey(Key key) {
+        if (key == null){
+            throw new NullPointerException();
+        }
         int index = Math.abs(key.hashCode()) % 5;
         LinkedList list = this.hashTable[index];
         if (list.getEl(key) == null){
@@ -130,7 +134,8 @@ public class HashTableImpl<Key, Value> implements HashTable<Key, Value> {
                 current = current.next;
             }
         }
-        return keys;
+        Set<Key> noModkeys = Collections.unmodifiableSet(keys);
+        return noModkeys;
     }
     @Override
     public Collection<Value> values() {
@@ -142,7 +147,8 @@ public class HashTableImpl<Key, Value> implements HashTable<Key, Value> {
                 current = current.next;
             }
         }
-        return values;
+        List<Value> noModvalues = Collections.unmodifiableList(values);
+        return noModvalues;
     }
     @Override
     public int size() {
