@@ -74,16 +74,17 @@ public class HashTableImpl<Key, Value> implements HashTable<Key, Value> {
         }
     }
     private LinkedList<Key, Value>[] hashTable;
+    private int arrLength;
     public HashTableImpl() {
-        int n = 5;
-        this.hashTable = new LinkedList[n];
-        for (int i =0; i<n; i++){
+        this.arrLength = 5;
+        this.hashTable = new LinkedList[this.arrLength];
+        for (int i =0; i<this.arrLength; i++){
             this.hashTable[i] = new LinkedList<Key, Value>();
         }
     }
     @Override
     public Value get(Key k) {
-        int index = Math.abs(k.hashCode()) % 5;
+        int index = Math.abs(k.hashCode()) % this.arrLength;
         LinkedList list = this.hashTable[index];
         if (list.getEl(k) == null){
             return null;
@@ -96,7 +97,10 @@ public class HashTableImpl<Key, Value> implements HashTable<Key, Value> {
         if (k == null){
             throw new IllegalArgumentException("Key cannot be null");
         }
-        int index = Math.abs(k.hashCode()) % 5;
+        if (this.size() >= this.arrLength*3){
+            resize();
+        }
+        int index = Math.abs(k.hashCode()) % this.arrLength;
         LinkedList list = this.hashTable[index];
         if (v == null){
             return (Value)list.deleteEl(k);
@@ -117,7 +121,7 @@ public class HashTableImpl<Key, Value> implements HashTable<Key, Value> {
         if (key == null){
             throw new NullPointerException();
         }
-        int index = Math.abs(key.hashCode()) % 5;
+        int index = Math.abs(key.hashCode()) % this.arrLength;
         LinkedList list = this.hashTable[index];
         if (list.getEl(key) == null){
             return false;
@@ -162,5 +166,22 @@ public class HashTableImpl<Key, Value> implements HashTable<Key, Value> {
         }
         return entries;
 
+    }
+
+    private void resize(){
+        this.arrLength *= 2;
+        LinkedList<Key, Value>[] newHashTable = new LinkedList[this.arrLength];
+        for (int i =0; i<this.arrLength; i++){
+            newHashTable[i] = new LinkedList<Key, Value>();
+        }
+        for (LinkedList list : this.hashTable){
+            Element<Key, Value> current = list.first;
+            while (current != null){
+                int newIndex = Math.abs(current.key.hashCode()) % this.arrLength;
+                newHashTable[newIndex].add(current.key, current.value);
+                current = current.next;
+            }
+        }
+        this.hashTable = newHashTable;
     }
 }

@@ -103,4 +103,13 @@ public class HashTableTest {
             assertEquals(this.startingSize-1-i, this.table.size());
         }
     }
+
+    @Test
+    public void arrayResizing(){
+        int testSize = 10000;
+        for (int i = 0; i< testSize; i++){
+            this.table.put("String"+i, i+"String");
+        }
+        assertTrue(this.table.arrLength > 2000);
+    }
 }
