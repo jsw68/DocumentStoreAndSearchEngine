@@ -493,7 +493,47 @@ public class DocumentStoreTest {
 
     @Test
     public void deleteAllWithPrefixAndMetadataTest() throws IOException{
-        
+        InputStream is = new ByteArrayInputStream("hello heather".getBytes());
+        this.store.put(is, URI.create("test"), DocumentStore.DocumentFormat.TXT);
+        is = new ByteArrayInputStream("hi".getBytes());
+        this.store.put(is, URI.create("test2"), DocumentStore.DocumentFormat.TXT);
+        is = new ByteArrayInputStream("hello".getBytes());
+        this.store.put(is, URI.create("test3"), DocumentStore.DocumentFormat.TXT);
+        is = new ByteArrayInputStream("hell heather hex".getBytes());
+        this.store.put(is, URI.create("test4"), DocumentStore.DocumentFormat.TXT);
+        is = new ByteArrayInputStream("hello".getBytes());
+        this.store.put(is, URI.create("test5"), DocumentStore.DocumentFormat.TXT);
+        assertEquals(this.store.setMetadata(URI.create("test"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test"), "key2", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test2"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test2"), "key2", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test3"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test3"), "key2", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test4"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test4"), "key2", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test5"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test5"), "not", "value2"), null);
+        Map<String, String> query = new HashMap<>();
+        query.put("key", "value");
+        query.put("key2", "value2");
+        Set<URI> docs = new HashSet<>(this.store.deleteAllWithPrefixAndMetadata("he", query));
+        assertEquals(3, docs.size());
+        assertTrue(docs.contains(URI.create("test")));
+        assertTrue(docs.contains(URI.create("test3")));
+        assertTrue(docs.contains(URI.create("test4")));
+        assertEquals(0, this.store.searchByPrefixAndMetadata("he", query).size());
+        docs = new HashSet<>(this.store.deleteAllWithPrefixAndMetadata("hi", query));
+        assertEquals(1, docs.size());
+        assertTrue(docs.contains(URI.create("test2")));
+        assertEquals(0, this.store.searchByPrefixAndMetadata("hi", query).size());
+        query.remove("key2");
+        assertFalse(this.store.get(URI.create("test5"))==null);
+        assertTrue(this.store.get(URI.create("test4"))==null);
+        // docs = new HashSet<>(this.store.deleteAllWithPrefixAndMetadata("he", query));
+        // List<Document> docs2 = new ArrayList<>(this.store.search("hello"));
+        // assertEquals(1, docs.size(), String.valueOf(docs2.size()));
+        // assertTrue(docs.contains(URI.create("test5")));
+        // assertEquals(0, this.store.searchByKeywordAndMetadata("he", query).size());
     }
 
 
