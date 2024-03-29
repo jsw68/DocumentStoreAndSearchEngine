@@ -129,14 +129,14 @@ public class DocumentStoreImpl implements DocumentStore {
         }
     }
 
-    private Set<Document> getDocsFromMetaMap(String key, String value){
-        for (Map.Entry<String, String> entry : this.metadataToDocHashMap.keySet()){
-            if (entry.getKey().equals(key) && entry.getValue().equals(value)){
-                return this.metadataToDocHashMap.get(entry);
-            }
-        }
-        return new HashSet<Document>();
-    }
+    // private Set<Document> getDocsFromMetaMap(String key, String value){
+    //     for (Map.Entry<String, String> entry : this.metadataToDocHashMap.keySet()){
+    //         if (entry.getKey().equals(key) && entry.getValue().equals(value)){
+    //             return this.metadataToDocHashMap.get(entry);
+    //         }
+    //     }
+    //     return new HashSet<Document>();
+    // }
 
     @Override
     public String getMetadata(URI uri, String key){
@@ -370,19 +370,19 @@ public class DocumentStoreImpl implements DocumentStore {
      * @return a List of all documents whose metadata contains ALL OF the given values for the given keys. If no documents contain all the given key-value pairs, return an empty list.
      */
     public List<Document> searchByMetadata(Map<String,String> keysValues){
-        Set<Document> docs = new HashSet<Document>();
-        boolean first = true;
-        for (Map.Entry<String, String> entry : keysValues.entrySet()){
-            Set<Document> tempDocs = getDocsFromMetaMap(entry.getKey(), entry.getValue());
-            if (docs.isEmpty() && first){
-                docs = tempDocs;
+        Set<Document> docs = new HashSet<>(this.docStoreHashTable.values());
+        for (Map.Entry<String, String> entry : keysValues.entrySet()) {
+        String key = entry.getKey();
+        String value = entry.getValue();
+        Set<Document> tempSet = new HashSet<>();
+        for (Document doc : docs) {
+            if (doc.getMetadata().containsKey(key) && doc.getMetadata().get(key).equals(value)) {
+                tempSet.add(doc);
             }
-            else{
-                docs.retainAll(tempDocs);
-            }
-            first = false;
         }
-        return new ArrayList<Document>(docs);
+        docs.retainAll(tempSet); // Retain documents that match the current key-value pair
+    }
+    return new ArrayList<>(docs);
     }
 
     /**

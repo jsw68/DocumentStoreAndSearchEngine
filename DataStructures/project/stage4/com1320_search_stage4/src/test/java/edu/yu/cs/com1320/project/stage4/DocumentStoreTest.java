@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.HashMap;
 
 import edu.yu.cs.com1320.project.stage4.DocumentStore.DocumentFormat;
 import edu.yu.cs.com1320.project.stage4.impl.DocumentImpl;
@@ -343,5 +345,157 @@ public class DocumentStoreTest {
         assertEquals(1, this.store.search("hem").size(), deletedUrIs.toString());
         assertEquals(1, this.store.searchByPrefix("h").size());
     }
+
+    @Test
+    public void searchByMetadataTest() throws IOException{
+        InputStream is = new ByteArrayInputStream("myString".getBytes());
+        this.store.put(is, URI.create("test3"), DocumentStore.DocumentFormat.TXT);
+        assertEquals(this.store.setMetadata(URI.create("test"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test"), "key2", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test2"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test2"), "key2", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test3"), "not", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test3"), "not1", "value2"), null);
+        Map<String, String> query = new HashMap<>();
+        query.put("key", "value");
+        List<Document> docs = new ArrayList<>(this.store.searchByMetadata(query));
+        assertEquals(2, docs.size());
+        assertTrue(docs.contains(this.store.get(URI.create("test"))));
+        assertTrue(docs.contains(this.store.get(URI.create("test2"))));
+        query = new HashMap<>();
+        query.put("not", "value");
+        docs = new ArrayList<>(this.store.searchByMetadata(query));
+        assertEquals(1, docs.size());
+        assertTrue(docs.contains(this.store.get(URI.create("test3"))));
+
+    }
+
+    @Test
+    public void searchByKeywordAndMetadataTest() throws IOException{
+        InputStream is = new ByteArrayInputStream("hello".getBytes());
+        this.store.put(is, URI.create("test"), DocumentStore.DocumentFormat.TXT);
+        is = new ByteArrayInputStream("hi".getBytes());
+        this.store.put(is, URI.create("test2"), DocumentStore.DocumentFormat.TXT);
+        is = new ByteArrayInputStream("hello".getBytes());
+        this.store.put(is, URI.create("test3"), DocumentStore.DocumentFormat.TXT);
+        assertEquals(this.store.setMetadata(URI.create("test"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test"), "key2", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test2"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test2"), "key2", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test3"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test3"), "key2", "value2"), null);
+        Map<String, String> query = new HashMap<>();
+        query.put("key", "value");
+        List<Document> docs = new ArrayList<>(this.store.searchByKeywordAndMetadata("hello", query));
+        assertEquals(2, docs.size());
+        assertTrue(docs.contains(this.store.get(URI.create("test"))));
+        assertTrue(docs.contains(this.store.get(URI.create("test3"))));
+        docs = new ArrayList<>(this.store.searchByKeywordAndMetadata("hi", query));
+        assertEquals(1, docs.size());
+        assertTrue(docs.contains(this.store.get(URI.create("test2"))));
+    }
+
+    @Test
+    public void searchByPrefixAndMetadataTest() throws IOException{
+        InputStream is = new ByteArrayInputStream("hello heather".getBytes());
+        this.store.put(is, URI.create("test"), DocumentStore.DocumentFormat.TXT);
+        is = new ByteArrayInputStream("hi".getBytes());
+        this.store.put(is, URI.create("test2"), DocumentStore.DocumentFormat.TXT);
+        is = new ByteArrayInputStream("hello".getBytes());
+        this.store.put(is, URI.create("test3"), DocumentStore.DocumentFormat.TXT);
+        is = new ByteArrayInputStream("hell heather hex".getBytes());
+        this.store.put(is, URI.create("test4"), DocumentStore.DocumentFormat.TXT);
+        is = new ByteArrayInputStream("hello".getBytes());
+        this.store.put(is, URI.create("test5"), DocumentStore.DocumentFormat.TXT);
+        assertEquals(this.store.setMetadata(URI.create("test"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test"), "key2", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test2"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test2"), "key2", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test3"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test3"), "key2", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test4"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test4"), "key2", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test5"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test5"), "not", "value2"), null);
+        Map<String, String> query = new HashMap<>();
+        query.put("key", "value");
+        query.put("key2", "value2");
+        List<Document> docs = new ArrayList<>(this.store.searchByPrefixAndMetadata("he", query));
+        assertEquals(3, docs.size());
+        assertTrue(docs.contains(this.store.get(URI.create("test"))));
+        assertTrue(docs.contains(this.store.get(URI.create("test3"))));
+        assertTrue(docs.contains(this.store.get(URI.create("test4"))));
+        assertEquals(URI.create("test4"), docs.get(0).getKey());
+        docs = new ArrayList<>(this.store.searchByPrefixAndMetadata("hi", query));
+        assertEquals(1, docs.size());
+        assertTrue(docs.contains(this.store.get(URI.create("test2"))));
+        query.remove("key2");
+        docs = new ArrayList<>(this.store.searchByPrefixAndMetadata("he", query));
+        assertEquals(4, docs.size());
+        assertTrue(docs.contains(this.store.get(URI.create("test"))));
+        assertTrue(docs.contains(this.store.get(URI.create("test3"))));
+        assertTrue(docs.contains(this.store.get(URI.create("test4"))));
+        assertTrue(docs.contains(this.store.get(URI.create("test5"))));
+    }
+
+    @Test
+    public void deleteAllWithMetadataTest() throws IOException{
+        InputStream is = new ByteArrayInputStream("myString".getBytes());
+        this.store.put(is, URI.create("test3"), DocumentStore.DocumentFormat.TXT);
+        assertEquals(this.store.setMetadata(URI.create("test"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test"), "key2", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test2"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test2"), "key2", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test3"), "not", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test3"), "not1", "value2"), null);
+        Map<String, String> query = new HashMap<>();
+        query.put("key", "value");
+        Set<URI> docs = new HashSet<>(this.store.deleteAllWithMetadata(query));
+        assertEquals(2, docs.size());
+        assertTrue(docs.contains(URI.create("test")));
+        assertTrue(docs.contains(URI.create("test2")));
+        assertEquals(0, this.store.searchByMetadata(query).size());
+        query = new HashMap<>();
+        query.put("not", "value");
+        docs = new HashSet<>(this.store.deleteAllWithMetadata(query));
+        assertEquals(1, docs.size());
+        assertTrue(docs.contains(URI.create("test3")));
+        assertEquals(0, this.store.searchByMetadata(query).size());
+    }
+    @Test
+    public void deleteAllWithKeywordAndMetadataTest() throws IOException{
+        InputStream is = new ByteArrayInputStream("hello".getBytes());
+        this.store.put(is, URI.create("test"), DocumentStore.DocumentFormat.TXT);
+        is = new ByteArrayInputStream("hi".getBytes());
+        this.store.put(is, URI.create("test2"), DocumentStore.DocumentFormat.TXT);
+        is = new ByteArrayInputStream("hello".getBytes());
+        this.store.put(is, URI.create("test3"), DocumentStore.DocumentFormat.TXT);
+        assertEquals(this.store.setMetadata(URI.create("test"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test"), "key2", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test2"), "not", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test2"), "key2", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test3"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test3"), "key2", "value2"), null);
+        Map<String, String> query = new HashMap<>();
+        query.put("key", "value");
+        Set<URI> docs = new HashSet<>(this.store.deleteAllWithKeywordAndMetadata("hello", query));
+        assertEquals(2, docs.size());
+        assertTrue(docs.contains(URI.create("test")));
+        assertTrue(docs.contains(URI.create("test3")));
+        assertEquals(0, this.store.searchByKeywordAndMetadata("hello", query).size());
+        query = new HashMap<>();
+        query.put("not", "value");
+        docs = new HashSet<>(this.store.deleteAllWithKeywordAndMetadata("hi", query));
+        assertEquals(1, docs.size());
+        assertTrue(docs.contains(URI.create("test2")));
+        assertEquals(0, this.store.searchByKeywordAndMetadata("hello", query).size());
+    }
+
+    @Test
+    public void deleteAllWithPrefixAndMetadataTest() throws IOException{
+        
+    }
+
+
 
 }
