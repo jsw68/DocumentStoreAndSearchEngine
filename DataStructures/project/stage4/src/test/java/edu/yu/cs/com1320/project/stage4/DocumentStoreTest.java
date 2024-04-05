@@ -565,13 +565,11 @@ public class DocumentStoreTest {
         assertTrue(deletedUrIs.contains(URI.create("doc3")));
         assertEquals(0, this.store.search("hi").size());
         assertEquals(2, deletedUrIs.size());
-        System.out.println("SIZE BEFORE COMMANDSET UNDOS:");
-        System.out.println(this.store.commandStack.size());
         this.store.undo();
-        assertEquals(2, this.store.search("hi").size(), String.valueOf(this.store.commandStack.size()));
+        assertEquals(2, this.store.search("hi").size());
         assertEquals(2, this.store.search("hi").size());
         this.store.undo();
-        assertEquals(2, this.store.searchByMetadata(query).size(), String.valueOf(this.store.commandStack.size()));
+        assertEquals(2, this.store.searchByMetadata(query).size());
     
     }
 
@@ -604,16 +602,14 @@ public class DocumentStoreTest {
         assertTrue(deletedUrIs.contains(URI.create("doc3")));
         assertEquals(0, this.store.search("hi").size());
         assertEquals(2, deletedUrIs.size());
-        System.out.println("SIZE BEFORE COMMANDSET UNDOS:");
-        System.out.println(this.store.commandStack.size());
         this.store.undo(URI.create("test"));
-        assertEquals(1, this.store.searchByMetadata(query).size(), String.valueOf(this.store.commandStack.size()));
+        assertEquals(1, this.store.searchByMetadata(query).size());
         this.store.undo(URI.create("doc2"));
-        assertEquals(1, this.store.search("hi").size(), String.valueOf(this.store.commandStack.size()));
+        assertEquals(1, this.store.search("hi").size());
         this.store.undo();
         assertEquals(2, this.store.search("hi").size());
         this.store.undo();
-        assertEquals(2, this.store.searchByMetadata(query).size(), String.valueOf(this.store.commandStack.size()));
+        assertEquals(2, this.store.searchByMetadata(query).size());
         this.store.undo();
         assertEquals(null, this.store.get(URI.create("doc3")));
 

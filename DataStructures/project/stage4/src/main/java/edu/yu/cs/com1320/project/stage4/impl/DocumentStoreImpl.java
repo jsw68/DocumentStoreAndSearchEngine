@@ -25,7 +25,7 @@ import java.util.function.Consumer;
 
 public class DocumentStoreImpl implements DocumentStore {
     private HashTable<URI, Document> docStoreHashTable;
-    public StackImpl<Undoable> commandStack;
+    private StackImpl<Undoable> commandStack;
     private TrieImpl<Document> wordOccurenceTrie;
     private HashMap<Map.Entry<String, String>, Set<Document>> metadataToDocHashMap;
 
