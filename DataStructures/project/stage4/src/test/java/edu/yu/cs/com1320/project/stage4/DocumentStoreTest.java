@@ -536,6 +536,86 @@ public class DocumentStoreTest {
         // assertEquals(0, this.store.searchByKeywordAndMetadata("he", query).size());
     }
 
+    @Test
+    public void undoCommandSetTest() throws IOException{
+        InputStream is = new ByteArrayInputStream("myString".getBytes());
+        this.store.put(is, URI.create("test3"), DocumentStore.DocumentFormat.TXT);
+        assertEquals(this.store.setMetadata(URI.create("test"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test"), "key2", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test2"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test2"), "key2", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test3"), "not", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test3"), "not1", "value2"), null);
+        Map<String, String> query = new HashMap<>();
+        query.put("key", "value");
+        is = new ByteArrayInputStream(("hello heather HI his").getBytes());
+        this.store.put(is, URI.create("doc1"), DocumentStore.DocumentFormat.TXT);
+        assertEquals(1, this.store.search("HI").size());
+        is = new ByteArrayInputStream(("hello hi hix").getBytes());
+        this.store.put(is, URI.create("doc2"), DocumentStore.DocumentFormat.TXT);
+        is = new ByteArrayInputStream(("hi hix").getBytes());
+        this.store.put(is, URI.create("doc3"), DocumentStore.DocumentFormat.TXT);
+        Set<URI> docs = new HashSet<>(this.store.deleteAllWithMetadata(query));
+        assertEquals(2, docs.size());
+        assertTrue(docs.contains(URI.create("test")));
+        assertTrue(docs.contains(URI.create("test2")));
+        assertEquals(0, this.store.searchByMetadata(query).size());
+        Set<URI> deletedUrIs = this.store.deleteAll("hi");
+        assertTrue(deletedUrIs.contains(URI.create("doc2")));
+        assertTrue(deletedUrIs.contains(URI.create("doc3")));
+        assertEquals(0, this.store.search("hi").size());
+        assertEquals(2, deletedUrIs.size());
+        System.out.println("SIZE BEFORE COMMANDSET UNDOS:");
+        System.out.println(this.store.commandStack.size());
+        this.store.undo();
+        assertEquals(2, this.store.search("hi").size(), String.valueOf(this.store.commandStack.size()));
+        assertEquals(2, this.store.search("hi").size());
+        this.store.undo();
+        assertEquals(2, this.store.searchByMetadata(query).size(), String.valueOf(this.store.commandStack.size()));
+    
+    }
 
+    @Test
+    public void undoSpecificCommandWithinSetTest() throws IOException{
+        InputStream is = new ByteArrayInputStream("myString".getBytes());
+        this.store.put(is, URI.create("test3"), DocumentStore.DocumentFormat.TXT);
+        assertEquals(this.store.setMetadata(URI.create("test"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test"), "key2", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test2"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test2"), "key2", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test3"), "not", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test3"), "not1", "value2"), null);
+        Map<String, String> query = new HashMap<>();
+        query.put("key", "value");
+        is = new ByteArrayInputStream(("hello heather HI his").getBytes());
+        this.store.put(is, URI.create("doc1"), DocumentStore.DocumentFormat.TXT);
+        assertEquals(1, this.store.search("HI").size());
+        is = new ByteArrayInputStream(("hello hi hix").getBytes());
+        this.store.put(is, URI.create("doc2"), DocumentStore.DocumentFormat.TXT);
+        is = new ByteArrayInputStream(("hi hix").getBytes());
+        this.store.put(is, URI.create("doc3"), DocumentStore.DocumentFormat.TXT);
+        Set<URI> docs = new HashSet<>(this.store.deleteAllWithMetadata(query));
+        assertEquals(2, docs.size());
+        assertTrue(docs.contains(URI.create("test")));
+        assertTrue(docs.contains(URI.create("test2")));
+        assertEquals(0, this.store.searchByMetadata(query).size());
+        Set<URI> deletedUrIs = this.store.deleteAll("hi");
+        assertTrue(deletedUrIs.contains(URI.create("doc2")));
+        assertTrue(deletedUrIs.contains(URI.create("doc3")));
+        assertEquals(0, this.store.search("hi").size());
+        assertEquals(2, deletedUrIs.size());
+        System.out.println("SIZE BEFORE COMMANDSET UNDOS:");
+        System.out.println(this.store.commandStack.size());
+        this.store.undo(URI.create("test"));
+        assertEquals(1, this.store.searchByMetadata(query).size(), String.valueOf(this.store.commandStack.size()));
+        this.store.undo(URI.create("doc2"));
+        assertEquals(1, this.store.search("hi").size(), String.valueOf(this.store.commandStack.size()));
+        this.store.undo();
+        assertEquals(2, this.store.search("hi").size());
+        this.store.undo();
+        assertEquals(2, this.store.searchByMetadata(query).size(), String.valueOf(this.store.commandStack.size()));
+        this.store.undo();
+        assertEquals(null, this.store.get(URI.create("doc3")));
 
+    }
 }
