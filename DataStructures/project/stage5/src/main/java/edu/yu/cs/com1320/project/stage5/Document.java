@@ -5,7 +5,7 @@ import edu.yu.cs.com1320.project.HashTable;
 import java.net.URI;
 import java.util.Set;
 
-public interface Document
+public interface Document extends Comparable<Document>
 {
 
     /**
@@ -53,4 +53,12 @@ public interface Document
      * @return all the words that appear in the document
      */
     Set<String> getWords();
+
+    //***************STAGE 5 ADDITIONS
+    /**
+     * return the last time this document was used, via put/get or via a search result
+     * (for stage 4 of project)
+     */
+    long getLastUseTime();
+    void setLastUseTime(long timeInNanoseconds);
 }

@@ -40,6 +40,7 @@ public class CommandSet<Target> extends AbstractSet<GenericCommand<Target>> impl
         if(containsTarget(c)){
             GenericCommand<Target> todo = null;
             for(GenericCommand<Target> cmd : this.genericCommands){
+                if (cmd == null) continue;
                 if(cmd.getTarget().equals(c)){
                     todo = cmd;
                     break;
@@ -72,6 +73,7 @@ public class CommandSet<Target> extends AbstractSet<GenericCommand<Target>> impl
         HashSet<GenericCommand<Target>> undone = new HashSet<>(this.genericCommands.size());
         Object[] allCommands = this.genericCommands.toArray();
         for(Object cmdObj : allCommands){
+            if (cmdObj == null) continue;
             GenericCommand<Target> cmd = (GenericCommand<Target>)cmdObj;
             if(cmd.undo()){
                 undone.add(cmd);
@@ -88,6 +90,10 @@ public class CommandSet<Target> extends AbstractSet<GenericCommand<Target>> impl
 
     @Override
     public int size() {
-        return this.genericCommands.size();
+        int size = 0;
+        for (GenericCommand<Target> cmd : this.genericCommands){
+            if (cmd != null) size++;
+        }
+        return size;
     }
 }

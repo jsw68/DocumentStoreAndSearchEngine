@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.HashMap;
 import edu.yu.cs.com1320.project.stage5.Document;
 import java.lang.Math;
+
 public class DocumentImpl implements Document {
     private URI uri;
     private String txt;
@@ -20,6 +21,7 @@ public class DocumentImpl implements Document {
     private HashTableImpl<String,String> meta;
     private HashMap<String,Integer> wordAppearanceCount;
     private TrieImpl<Integer> wordCountTrie;
+    private long lastUseTime;
     private int wordCount;
     public DocumentImpl(URI uri, String txt){
         if (uri == null || txt == null || txt.isEmpty() || uri.toString().isEmpty()){
@@ -29,6 +31,7 @@ public class DocumentImpl implements Document {
         this.uri = uri;
         this.txt = txt;
         this.meta = new HashTableImpl<>();
+        this.lastUseTime = System.nanoTime();
         // word count and number of times a word appears
         this.wordAppearanceCount = new HashMap<>();
         this.wordCountTrie = new TrieImpl<>();
@@ -59,6 +62,7 @@ public class DocumentImpl implements Document {
         this.binaryData = binaryData;
         this.meta = new HashTableImpl<>();
         this.wordAppearanceCount = new HashMap<>();
+        this.lastUseTime = System.nanoTime();
 
     }
 
@@ -153,6 +157,20 @@ public class DocumentImpl implements Document {
             return null;
         }
         return this.wordAppearanceCount.keySet();
+    }
+
+
+    /** START STAGE 5 ADDITIONS */
+    //  * return the last time this document was used, via put/get or via a search result
+    //  * (for stage 4 of project)
+    //  */
+    @Override
+    public long getLastUseTime(){
+        return this.lastUseTime;
+    }
+    @Override
+    public void setLastUseTime(long timeInNanoseconds){
+        this.lastUseTime = timeInNanoseconds;
     }
 
 }

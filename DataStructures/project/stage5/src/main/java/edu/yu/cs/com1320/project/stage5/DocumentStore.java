@@ -155,4 +155,19 @@ public interface DocumentStore
      * @return a Set of URIs of the documents that were deleted.
      */
     Set<URI> deleteAllWithPrefixAndMetadata(String keywordPrefix,Map<String,String> keysValues);
+    //**********STAGE 5 ADDITIONS
+    
+    /**
+     * set maximum number of documents that may be stored
+     * @param limit
+     * @throws IllegalArgumentException if limit < 1
+     */
+    void setMaxDocumentCount(int limit);
+
+    /**
+     * set maximum number of bytes of memory that may be used by all the documents in memory combined
+     * @param limit
+     * @throws IllegalArgumentException if limit < 1
+     */
+    void setMaxDocumentBytes(int limit);
 }
