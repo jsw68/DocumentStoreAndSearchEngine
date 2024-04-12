@@ -173,4 +173,18 @@ public class DocumentImpl implements Document {
         this.lastUseTime = timeInNanoseconds;
     }
 
+    @Override
+    public int compareTo(Document doc){
+        if (doc == null){
+            return 1;
+        }
+        if (this.lastUseTime > doc.getLastUseTime()){
+            return 1;
+        }
+        else if (this.lastUseTime < doc.getLastUseTime()){
+            return -1;
+        }
+        return 0;
+    }
+
 }

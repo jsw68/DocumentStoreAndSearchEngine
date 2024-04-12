@@ -614,4 +614,86 @@ public class DocumentStoreTest {
         assertEquals(null, this.store.get(URI.create("doc3")));
 
     }
+
+    @Test
+    public void setMaxDocumentBytesTest() throws IOException{
+        this.store.setMaxDocumentBytes(1);
+        assertEquals(null, this.store.get(URI.create("test")));
+        assertEquals(null, this.store.get(URI.create("test2")));
+        this.store.setMaxDocumentBytes(10000);
+        InputStream is = new ByteArrayInputStream(("hello heather HI his").getBytes());
+        // byte size: 20
+        this.store.put(is, URI.create("doc1"), DocumentStore.DocumentFormat.TXT);
+        assertEquals(1, this.store.search("HI").size());
+        // byte size: 12
+        is = new ByteArrayInputStream(("hello hi hix").getBytes());
+        this.store.put(is, URI.create("doc2"), DocumentStore.DocumentFormat.TXT);
+        // byte size: 6
+        is = new ByteArrayInputStream(("hi hix").getBytes());
+        this.store.put(is, URI.create("doc3"), DocumentStore.DocumentFormat.TXT);
+        // assertEquals(2, this.store.search("hello").size());
+        // System.out.println(this.store.search("hello").size());
+        this.store.setMaxDocumentBytes(19);
+        assertEquals(0, this.store.search("HI").size());
+        assertEquals(2, this.store.search("hi").size());
+        // List<Document> docs = this.store.search("hello"); 
+        // for (Document doc : docs){
+        //     System.out.println(doc.getKey());
+        // }
+        // this.store.setMaxDocumentBytes(10000);
+        // is = new ByteArrayInputStream(("hello heather HI his").getBytes());
+        // this.store.put(is, URI.create("doc1"), DocumentStore.DocumentFormat.TXT);
+        // this.store.search("hello");
+        // this.store.setMaxDocumentCount(2);
+        // docs = this.store.search("hello"); 
+        // for (Document doc : docs){
+        //     System.out.println(doc.getKey());
+        // }
+        // assertEquals(2, this.store.search("hello").size());
+        // assertEquals(1, this.store.search("hix").size());
+
+
+    }
+
+    @Test
+    public void maxDocumentBytesEditWithReHeapifyTest() throws IOException{
+            this.store.setMaxDocumentBytes(1);
+            assertEquals(null, this.store.get(URI.create("test")));
+            assertEquals(null, this.store.get(URI.create("test2")));
+            this.store.setMaxDocumentBytes(10000);
+            // byte size: 17
+            InputStream is = new ByteArrayInputStream(("document number 1").getBytes());
+            this.store.put(is, URI.create("doc1"), DocumentStore.DocumentFormat.TXT);
+            // byte size: 17
+            is = new ByteArrayInputStream(("document number 2").getBytes());
+            this.store.put(is, URI.create("doc2"), DocumentStore.DocumentFormat.TXT);
+            // byte size: 17
+            is = new ByteArrayInputStream(("document number 3").getBytes());
+            this.store.put(is, URI.create("doc3"), DocumentStore.DocumentFormat.TXT);
+            assertEquals(3, this.store.search("document").size());
+            List<Document> docs = this.store.search("document");
+            for (Document doc : docs){
+                System.out.println(doc.getKey());
+                System.out.println(doc.getDocumentTxt().getBytes().length);
+            }
+            // System.out.println(this.store.currentDocumentBytes);
+            docs = this.store.search("2");
+            for (Document doc : docs){
+                System.out.println(doc.getKey());
+                System.out.println(doc.getDocumentTxt().getBytes().length);
+            }
+            // this.store.setMaxDocumentBytes(1);
+            this.store.setMaxDocumentCount(1);
+            
+            // System.out.println(this.store.currentDocumentBytes);
+            System.out.println(this.store.search("document").size());
+            assertEquals(1, this.store.search("2").size());
+            docs = this.store.search("2");
+            for (Document doc : docs){
+                System.out.println(doc.getKey());
+                System.out.println(doc.getDocumentTxt());
+                System.out.println(doc.getDocumentTxt().getBytes().length);
+            }
+            assertEquals(1, this.store.search("2").size());
+    }
 }

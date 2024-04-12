@@ -43,8 +43,8 @@ public class DocumentStoreImpl implements DocumentStore {
         this.wordOccurenceTrie = new TrieImpl<>();
         this.metadataToDocHashMap = new HashMap<>();
         this.recentlyUsedDocumentsHeapImpl = new MinHeapImpl<>();
-        this.maxDocumentCount = -1;
-        this.maxDocumentBytes = -1;
+        this.maxDocumentCount = Integer.MAX_VALUE;
+        this.maxDocumentBytes = Integer.MAX_VALUE;
         this.currentDocumentCount = 0;
         this.currentDocumentBytes = 0;
     }
@@ -59,19 +59,25 @@ public class DocumentStoreImpl implements DocumentStore {
         if (input == null) {
             // delete doc at URI
             previous = this.docStoreHashTable.put(uri, null);
+            previous.setLastUseTime(System.nanoTime());
+            this.recentlyUsedDocumentsHeapImpl.reHeapify(previous);
 
         } else {
             Document doc = readBytesAndFormat(input, uri, format);
             previous = this.docStoreHashTable.put(uri, doc);
+            this.recentlyUsedDocumentsHeapImpl.insert(doc);
+            doc.setLastUseTime(System.nanoTime());
+            this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         }
-        this.recentlyUsedDocumentsHeapImpl.insert(doc);
-        doc.setLastUseTime(System.nanoTime());
+        
         Consumer<URI> undo = (URI url) -> {
             this.docStoreHashTable.put(url, previous);
             if (previous != null) {
                 removeDocFromTrie(previous);
+                previous.setLastUseTime(System.nanoTime());
+                this.recentlyUsedDocumentsHeapImpl.reHeapify(previous);
             }
-            previous.setLastUseTime(System.nanoTime());
+            
 
         };
         GenericCommand<URI> command = new GenericCommand<URI>(uri, undo);
@@ -107,6 +113,7 @@ public class DocumentStoreImpl implements DocumentStore {
             return null;
         }
         doc.setLastUseTime(System.nanoTime());
+        this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         return doc;
     }
 
@@ -121,11 +128,13 @@ public class DocumentStoreImpl implements DocumentStore {
         }
         String oldValue = doc.setMetadataValue(key, value);
         addToMetaDocMap(doc, key, value);
-        doc.setLastUseTime(System.nanoTime();
+        doc.setLastUseTime(System.nanoTime());
+        this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         Consumer<URI> undo = (URI url) -> {
             this.docStoreHashTable.get(url).setMetadataValue(key, oldValue);
             removeFromMetaDocMap(doc, key, value);
             doc.setLastUseTime(System.nanoTime());
+            this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         };
         GenericCommand<URI> command = new GenericCommand<URI>(uri, undo);
         this.commandStack.push(command);
@@ -171,6 +180,7 @@ public class DocumentStoreImpl implements DocumentStore {
             throw new IllegalArgumentException();
         }
         doc.setLastUseTime(System.nanoTime());
+        this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         return doc.getMetadataValue(key);
     }
 
@@ -184,6 +194,7 @@ public class DocumentStoreImpl implements DocumentStore {
             totallyDeleteDocumentInMetaMap(deleted);
             totallyDeleteDocumentInTrie(deleted);
             deleted.setLastUseTime(System.nanoTime());
+            this.recentlyUsedDocumentsHeapImpl.reHeapify(deleted);
             Consumer<URI> undo = (URI url) -> {
                 this.docStoreHashTable.put(url, deleted);
                 addDocToTrie(deleted);
@@ -191,6 +202,7 @@ public class DocumentStoreImpl implements DocumentStore {
                     addToMetaDocMap(deleted, key, deleted.getMetadata().get(key));
                 }
                 deleted.setLastUseTime(System.nanoTime());
+                this.recentlyUsedDocumentsHeapImpl.reHeapify(deleted);
             };
             GenericCommand<URI> command = new GenericCommand<URI>(uri, undo);
             this.commandStack.push(command);
@@ -300,6 +312,7 @@ public class DocumentStoreImpl implements DocumentStore {
         });
         for (Document doc : docs) {
             doc.setLastUseTime(System.nanoTime());
+            this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         }
         return docs;
     }
@@ -322,6 +335,7 @@ public class DocumentStoreImpl implements DocumentStore {
         });
         for (Document doc : docs) {
             doc.setLastUseTime(System.nanoTime());
+            this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         }
         return docs;
     }
@@ -359,6 +373,7 @@ public class DocumentStoreImpl implements DocumentStore {
                     addToMetaDocMap(doc, key, doc.getMetadata().get(key));
                 }
                 doc.setLastUseTime(System.nanoTime());
+                this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
             };
             GenericCommand<URI> command = new GenericCommand<URI>(doc.getKey(), undo);
             commandSet.addCommand(command);
@@ -370,6 +385,7 @@ public class DocumentStoreImpl implements DocumentStore {
                 totallyDeleteDocumentInTrie(doc);
                 totallyDeleteDocumentInMetaMap(doc);
                 doc.setLastUseTime(System.nanoTime());
+                this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
             }
         }
         this.commandStack.push(commandSet);
@@ -397,6 +413,7 @@ public class DocumentStoreImpl implements DocumentStore {
                     addToMetaDocMap(doc, key, doc.getMetadata().get(key));
                 }
                 doc.setLastUseTime(System.nanoTime());
+                this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
             };
             GenericCommand<URI> command = new GenericCommand<URI>(doc.getKey(), undo);
             commandSet.addCommand(command);
@@ -407,6 +424,7 @@ public class DocumentStoreImpl implements DocumentStore {
             totallyDeleteDocumentInTrie(doc);
             totallyDeleteDocumentInMetaMap(doc);
             doc.setLastUseTime(System.nanoTime());
+            this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         }
         
         this.commandStack.push(commandSet);
@@ -434,6 +452,7 @@ public class DocumentStoreImpl implements DocumentStore {
         }
         for (Document doc : docs) {
             doc.setLastUseTime(System.nanoTime());
+            this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         }
         return new ArrayList<>(docs);
     }
@@ -457,6 +476,7 @@ public class DocumentStoreImpl implements DocumentStore {
         // TODO check that order is maintained
         for (Document doc : keywordMatches) {
             doc.setLastUseTime(System.nanoTime());
+            this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         }
         return keywordMatches;
     }
@@ -479,6 +499,7 @@ public class DocumentStoreImpl implements DocumentStore {
         // TODO check that order is maintained
         for (Document doc : prefixMatches) {
             doc.setLastUseTime(System.nanoTime());
+            this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         }
         return prefixMatches;
     }
@@ -502,6 +523,7 @@ public class DocumentStoreImpl implements DocumentStore {
                     addToMetaDocMap(doc, key, doc.getMetadata().get(key));
                 }
                 doc.setLastUseTime(System.nanoTime());
+                this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
             };
             GenericCommand<URI> command = new GenericCommand<URI>(doc.getKey(), undo);
             commandSet.addCommand(command);
@@ -513,6 +535,7 @@ public class DocumentStoreImpl implements DocumentStore {
             totallyDeleteDocumentInTrie(doc);
             totallyDeleteDocumentInMetaMap(doc);
             doc.setLastUseTime(System.nanoTime());
+            this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         }
         
         this.commandStack.push(commandSet);
@@ -557,6 +580,7 @@ public class DocumentStoreImpl implements DocumentStore {
                     addToMetaDocMap(doc, key, doc.getMetadata().get(key));
                 }
                 doc.setLastUseTime(System.nanoTime());
+                this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
             };
             
             GenericCommand<URI> command = new GenericCommand<URI>(doc.getKey(), undo);
@@ -568,6 +592,7 @@ public class DocumentStoreImpl implements DocumentStore {
             totallyDeleteDocumentInTrie(doc);
             totallyDeleteDocumentInMetaMap(doc);
             doc.setLastUseTime(System.nanoTime());
+            this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         }
         
         this.commandStack.push(commandSet);
@@ -595,6 +620,7 @@ public class DocumentStoreImpl implements DocumentStore {
                     addToMetaDocMap(doc, key, doc.getMetadata().get(key));
                 }
                 doc.setLastUseTime(System.nanoTime());
+                this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
             };
             GenericCommand<URI> command = new GenericCommand<URI>(doc.getKey(), undo);
             commandSet.addCommand(command);
@@ -605,8 +631,8 @@ public class DocumentStoreImpl implements DocumentStore {
             totallyDeleteDocumentInTrie(doc);
             totallyDeleteDocumentInMetaMap(doc);
             doc.setLastUseTime(System.nanoTime());
+            this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         }
-        
         this.commandStack.push(commandSet);
         return deletedURIs;
     }
@@ -623,6 +649,7 @@ public class DocumentStoreImpl implements DocumentStore {
             throw new IllegalArgumentException();
         }
         this.maxDocumentCount = limit;
+        checkMemory();
     }
 
     /**
@@ -635,6 +662,7 @@ public class DocumentStoreImpl implements DocumentStore {
             throw new IllegalArgumentException();
         }
         this.maxDocumentBytes = limit;
+        checkMemory();
     }
 
     private void checkMemory(){
@@ -648,7 +676,7 @@ public class DocumentStoreImpl implements DocumentStore {
 
     private void wipeDocumentsUntilSpaceAvailable(){
         while (this.currentDocumentCount > this.maxDocumentCount || this.currentDocumentBytes > this.maxDocumentBytes){
-            Document doc = this.recentlyUsedDocumentsHeapImpl.removeMin();
+            Document doc = this.recentlyUsedDocumentsHeapImpl.remove();
             if (doc.getDocumentBinaryData()!=null){
                 this.currentDocumentBytes -= doc.getDocumentBinaryData().length;
             }
