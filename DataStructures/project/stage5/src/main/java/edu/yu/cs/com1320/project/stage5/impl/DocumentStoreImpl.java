@@ -69,7 +69,7 @@ public class DocumentStoreImpl implements DocumentStore {
             doc.setLastUseTime(System.nanoTime());
             this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         }
-        
+
         Consumer<URI> undo = (URI url) -> {
             this.docStoreHashTable.put(url, previous);
             if (previous != null) {
@@ -77,8 +77,6 @@ public class DocumentStoreImpl implements DocumentStore {
                 previous.setLastUseTime(System.nanoTime());
                 this.recentlyUsedDocumentsHeapImpl.reHeapify(previous);
             }
-            
-
         };
         GenericCommand<URI> command = new GenericCommand<URI>(uri, undo);
         this.commandStack.push(command);
@@ -244,15 +242,13 @@ public class DocumentStoreImpl implements DocumentStore {
     @Override
     public void undo() throws IllegalStateException {
         Undoable command = this.commandStack.pop();
-        if (command instanceof CommandSet){
-            CommandSet<URI> commandSet = (CommandSet<URI>)command;
+        if (command instanceof CommandSet) {
+            CommandSet<URI> commandSet = (CommandSet<URI>) command;
             commandSet.undoAll();
-        }
-        else if (command instanceof GenericCommand){
-            GenericCommand<URI> genericCommand = (GenericCommand<URI>)command;
+        } else if (command instanceof GenericCommand) {
+            GenericCommand<URI> genericCommand = (GenericCommand<URI>) command;
             genericCommand.undo();
-        }
-        else{
+        } else {
             throw new IllegalStateException();
         }
     }
@@ -310,7 +306,7 @@ public class DocumentStoreImpl implements DocumentStore {
                 return doc2.wordCount(keyword) - doc1.wordCount(keyword);
             }
         });
-        long currentNanoTime = System.nanoTime();  
+        long currentNanoTime = System.nanoTime();
         for (Document doc : docs) {
             doc.setLastUseTime(currentNanoTime);
             this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
@@ -334,7 +330,7 @@ public class DocumentStoreImpl implements DocumentStore {
                 return prefixCount(doc2, keywordPrefix) - prefixCount(doc1, keywordPrefix);
             }
         });
-        long currentNanoTime = System.nanoTime();  
+        long currentNanoTime = System.nanoTime();
         for (Document doc : docs) {
             doc.setLastUseTime(currentNanoTime);
             this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
@@ -380,8 +376,14 @@ public class DocumentStoreImpl implements DocumentStore {
             GenericCommand<URI> command = new GenericCommand<URI>(doc.getKey(), undo);
             commandSet.addCommand(command);
         }
-        long currentNanoTime = System.nanoTime();  
-        for (URI uri : deletedURIs) {
+        deleteAllHelper(deletedURIs);
+        this.commandStack.push(commandSet);
+        return deletedURIs;
+    }
+
+    private void deleteAllHelper(Set<URI> URIs){
+        long currentNanoTime = System.nanoTime();
+        for (URI uri : URIs) {
             Document doc = this.docStoreHashTable.get(uri);
             if (doc != null) {
                 this.docStoreHashTable.put(uri, null);
@@ -391,8 +393,6 @@ public class DocumentStoreImpl implements DocumentStore {
                 this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
             }
         }
-        this.commandStack.push(commandSet);
-        return deletedURIs;
     }
 
     /**
@@ -421,7 +421,7 @@ public class DocumentStoreImpl implements DocumentStore {
             GenericCommand<URI> command = new GenericCommand<URI>(doc.getKey(), undo);
             commandSet.addCommand(command);
         }
-        long currentNanoTime = System.nanoTime();  
+        long currentNanoTime = System.nanoTime();
         for (Document doc : targetDocs) {
             deletedURIs.add(doc.getKey());
             this.docStoreHashTable.put(doc.getKey(), null);
@@ -430,7 +430,7 @@ public class DocumentStoreImpl implements DocumentStore {
             doc.setLastUseTime(currentNanoTime);
             this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         }
-        
+
         this.commandStack.push(commandSet);
         return deletedURIs;
     }
@@ -454,7 +454,7 @@ public class DocumentStoreImpl implements DocumentStore {
             }
             docs.retainAll(tempSet); // Retain documents that match the current key-value pair
         }
-        long currentNanoTime = System.nanoTime();  
+        long currentNanoTime = System.nanoTime();
         for (Document doc : docs) {
             doc.setLastUseTime(currentNanoTime);
             this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
@@ -479,7 +479,7 @@ public class DocumentStoreImpl implements DocumentStore {
         List<Document> metadataMatches = searchByMetadata(keysValues);
         keywordMatches.retainAll(metadataMatches);
         // TODO check that order is maintained
-        long currentNanoTime = System.nanoTime();  
+        long currentNanoTime = System.nanoTime();
         for (Document doc : keywordMatches) {
             doc.setLastUseTime(currentNanoTime);
             this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
@@ -503,7 +503,7 @@ public class DocumentStoreImpl implements DocumentStore {
         List<Document> metadataMatches = searchByMetadata(keysValues);
         prefixMatches.retainAll(metadataMatches);
         // TODO check that order is maintained
-        long currentNanoTime = System.nanoTime();  
+        long currentNanoTime = System.nanoTime();
         for (Document doc : prefixMatches) {
             doc.setLastUseTime(currentNanoTime);
             this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
@@ -534,9 +534,9 @@ public class DocumentStoreImpl implements DocumentStore {
             };
             GenericCommand<URI> command = new GenericCommand<URI>(doc.getKey(), undo);
             commandSet.addCommand(command);
-            
+
         }
-        long currentNanoTime = System.nanoTime();  
+        long currentNanoTime = System.nanoTime();
         for (Document doc : targetDocs) {
             deletedURIs.add(doc.getKey());
             this.docStoreHashTable.put(doc.getKey(), null);
@@ -545,7 +545,7 @@ public class DocumentStoreImpl implements DocumentStore {
             doc.setLastUseTime(currentNanoTime);
             this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         }
-        
+
         this.commandStack.push(commandSet);
         return deletedURIs;
     }
@@ -590,11 +590,11 @@ public class DocumentStoreImpl implements DocumentStore {
                 doc.setLastUseTime(System.nanoTime());
                 this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
             };
-            
+
             GenericCommand<URI> command = new GenericCommand<URI>(doc.getKey(), undo);
             commandSet.addCommand(command);
         }
-        long currentNanoTime = System.nanoTime();  
+        long currentNanoTime = System.nanoTime();
         for (Document doc : targetDocs) {
             deletedURIs.add(doc.getKey());
             this.docStoreHashTable.put(doc.getKey(), null);
@@ -603,7 +603,7 @@ public class DocumentStoreImpl implements DocumentStore {
             doc.setLastUseTime(currentNanoTime);
             this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         }
-        
+
         this.commandStack.push(commandSet);
         return deletedURIs;
     }
@@ -634,7 +634,7 @@ public class DocumentStoreImpl implements DocumentStore {
             GenericCommand<URI> command = new GenericCommand<URI>(doc.getKey(), undo);
             commandSet.addCommand(command);
         }
-        long currentNanoTime = System.nanoTime();  
+        long currentNanoTime = System.nanoTime();
         for (Document doc : targetDocs) {
             deletedURIs.add(doc.getKey());
             this.docStoreHashTable.put(doc.getKey(), null);
@@ -647,15 +647,16 @@ public class DocumentStoreImpl implements DocumentStore {
         return deletedURIs;
     }
 
-    //**********STAGE 5 ADDITIONS
-    
+    // **********STAGE 5 ADDITIONS
+
     /**
      * set maximum number of documents that may be stored
+     * 
      * @param limit
      * @throws IllegalArgumentException if limit < 1
      */
-    public void setMaxDocumentCount(int limit){
-        if (limit < 1){
+    public void setMaxDocumentCount(int limit) {
+        if (limit < 1) {
             throw new IllegalArgumentException();
         }
         this.maxDocumentCount = limit;
@@ -663,63 +664,63 @@ public class DocumentStoreImpl implements DocumentStore {
     }
 
     /**
-     * set maximum number of bytes of memory that may be used by all the documents in memory combined
+     * set maximum number of bytes of memory that may be used by all the documents
+     * in memory combined
+     * 
      * @param limit
      * @throws IllegalArgumentException if limit < 1
      */
-    public void setMaxDocumentBytes(int limit){
-        if (limit < 1){
+    public void setMaxDocumentBytes(int limit) {
+        if (limit < 1) {
             throw new IllegalArgumentException();
         }
         this.maxDocumentBytes = limit;
         checkMemory();
     }
 
-    private void checkMemory(){
-        if (this.maxDocumentCount != -1 && this.currentDocumentCount > this.maxDocumentCount){
+    private void checkMemory() {
+        if (this.maxDocumentCount != -1 && this.currentDocumentCount > this.maxDocumentCount) {
             wipeDocumentsUntilSpaceAvailable();
         }
-        if (this.maxDocumentBytes != -1 && this.currentDocumentBytes > this.maxDocumentBytes){
+        if (this.maxDocumentBytes != -1 && this.currentDocumentBytes > this.maxDocumentBytes) {
             wipeDocumentsUntilSpaceAvailable();
         }
     }
 
-    private void wipeDocumentsUntilSpaceAvailable(){
-        while (this.currentDocumentCount > this.maxDocumentCount || this.currentDocumentBytes > this.maxDocumentBytes){
+    private void wipeDocumentsUntilSpaceAvailable() {
+        while (this.currentDocumentCount > this.maxDocumentCount || this.currentDocumentBytes > this.maxDocumentBytes) {
             Document doc = this.recentlyUsedDocumentsHeapImpl.remove();
-            if (doc.getDocumentBinaryData()!=null){
+            if (doc.getDocumentBinaryData() != null) {
                 this.currentDocumentBytes -= doc.getDocumentBinaryData().length;
-            }
-            else{
+            } else {
                 this.currentDocumentBytes -= doc.getDocumentTxt().getBytes().length;
             }
             this.currentDocumentCount--;
-            if (doc != null){
+            if (doc != null) {
                 totallyWipeDocument(doc);
             }
         }
     }
 
-    private void totallyWipeDocument(Document doc){
+    private void totallyWipeDocument(Document doc) {
         this.docStoreHashTable.put(doc.getKey(), null);
         totallyDeleteDocumentInTrie(doc);
         totallyDeleteDocumentInMetaMap(doc);
         totallyDeleteDocumentInCommandStack(doc);
     }
 
-    private void totallyDeleteDocumentInCommandStack(Document doc){
+    private void totallyDeleteDocumentInCommandStack(Document doc) {
         StackImpl<Undoable> temp = new StackImpl<Undoable>();
         Undoable nextCommand = this.commandStack.pop();
         URI targetURI = doc.getKey();
-        for (int i =0; i< this.commandStack.size();i++){
+        for (int i = 0; i < this.commandStack.size(); i++) {
             if (nextCommand == null) {
                 continue;
-            }
-            else if (nextCommand instanceof CommandSet && ((CommandSet<URI>) nextCommand).containsTarget(targetURI)) {
+            } else if (nextCommand instanceof CommandSet && ((CommandSet<URI>) nextCommand).containsTarget(targetURI)) {
                 CommandSet<URI> commandSet = (CommandSet<URI>) nextCommand;
-                for (GenericCommand<URI> command : commandSet){
-                    if (command.getTarget().equals(targetURI)){
-                        command=null;
+                for (GenericCommand<URI> command : commandSet) {
+                    if (command.getTarget().equals(targetURI)) {
+                        command = null;
                     }
                 }
                 // check if commandSet is empty
