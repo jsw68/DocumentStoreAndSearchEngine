@@ -310,8 +310,9 @@ public class DocumentStoreImpl implements DocumentStore {
                 return doc2.wordCount(keyword) - doc1.wordCount(keyword);
             }
         });
+        long currentNanoTime = System.nanoTime();  
         for (Document doc : docs) {
-            doc.setLastUseTime(System.nanoTime());
+            doc.setLastUseTime(currentNanoTime);
             this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         }
         return docs;
@@ -333,8 +334,9 @@ public class DocumentStoreImpl implements DocumentStore {
                 return prefixCount(doc2, keywordPrefix) - prefixCount(doc1, keywordPrefix);
             }
         });
+        long currentNanoTime = System.nanoTime();  
         for (Document doc : docs) {
-            doc.setLastUseTime(System.nanoTime());
+            doc.setLastUseTime(currentNanoTime);
             this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         }
         return docs;
@@ -378,13 +380,14 @@ public class DocumentStoreImpl implements DocumentStore {
             GenericCommand<URI> command = new GenericCommand<URI>(doc.getKey(), undo);
             commandSet.addCommand(command);
         }
+        long currentNanoTime = System.nanoTime();  
         for (URI uri : deletedURIs) {
             Document doc = this.docStoreHashTable.get(uri);
             if (doc != null) {
                 this.docStoreHashTable.put(uri, null);
                 totallyDeleteDocumentInTrie(doc);
                 totallyDeleteDocumentInMetaMap(doc);
-                doc.setLastUseTime(System.nanoTime());
+                doc.setLastUseTime(currentNanoTime);
                 this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
             }
         }
@@ -418,12 +421,13 @@ public class DocumentStoreImpl implements DocumentStore {
             GenericCommand<URI> command = new GenericCommand<URI>(doc.getKey(), undo);
             commandSet.addCommand(command);
         }
+        long currentNanoTime = System.nanoTime();  
         for (Document doc : targetDocs) {
             deletedURIs.add(doc.getKey());
             this.docStoreHashTable.put(doc.getKey(), null);
             totallyDeleteDocumentInTrie(doc);
             totallyDeleteDocumentInMetaMap(doc);
-            doc.setLastUseTime(System.nanoTime());
+            doc.setLastUseTime(currentNanoTime);
             this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         }
         
@@ -450,8 +454,9 @@ public class DocumentStoreImpl implements DocumentStore {
             }
             docs.retainAll(tempSet); // Retain documents that match the current key-value pair
         }
+        long currentNanoTime = System.nanoTime();  
         for (Document doc : docs) {
-            doc.setLastUseTime(System.nanoTime());
+            doc.setLastUseTime(currentNanoTime);
             this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         }
         return new ArrayList<>(docs);
@@ -474,8 +479,9 @@ public class DocumentStoreImpl implements DocumentStore {
         List<Document> metadataMatches = searchByMetadata(keysValues);
         keywordMatches.retainAll(metadataMatches);
         // TODO check that order is maintained
+        long currentNanoTime = System.nanoTime();  
         for (Document doc : keywordMatches) {
-            doc.setLastUseTime(System.nanoTime());
+            doc.setLastUseTime(currentNanoTime);
             this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         }
         return keywordMatches;
@@ -497,8 +503,9 @@ public class DocumentStoreImpl implements DocumentStore {
         List<Document> metadataMatches = searchByMetadata(keysValues);
         prefixMatches.retainAll(metadataMatches);
         // TODO check that order is maintained
+        long currentNanoTime = System.nanoTime();  
         for (Document doc : prefixMatches) {
-            doc.setLastUseTime(System.nanoTime());
+            doc.setLastUseTime(currentNanoTime);
             this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         }
         return prefixMatches;
@@ -529,12 +536,13 @@ public class DocumentStoreImpl implements DocumentStore {
             commandSet.addCommand(command);
             
         }
+        long currentNanoTime = System.nanoTime();  
         for (Document doc : targetDocs) {
             deletedURIs.add(doc.getKey());
             this.docStoreHashTable.put(doc.getKey(), null);
             totallyDeleteDocumentInTrie(doc);
             totallyDeleteDocumentInMetaMap(doc);
-            doc.setLastUseTime(System.nanoTime());
+            doc.setLastUseTime(currentNanoTime);
             this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         }
         
@@ -586,12 +594,13 @@ public class DocumentStoreImpl implements DocumentStore {
             GenericCommand<URI> command = new GenericCommand<URI>(doc.getKey(), undo);
             commandSet.addCommand(command);
         }
+        long currentNanoTime = System.nanoTime();  
         for (Document doc : targetDocs) {
             deletedURIs.add(doc.getKey());
             this.docStoreHashTable.put(doc.getKey(), null);
             totallyDeleteDocumentInTrie(doc);
             totallyDeleteDocumentInMetaMap(doc);
-            doc.setLastUseTime(System.nanoTime());
+            doc.setLastUseTime(currentNanoTime);
             this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         }
         
@@ -625,12 +634,13 @@ public class DocumentStoreImpl implements DocumentStore {
             GenericCommand<URI> command = new GenericCommand<URI>(doc.getKey(), undo);
             commandSet.addCommand(command);
         }
+        long currentNanoTime = System.nanoTime();  
         for (Document doc : targetDocs) {
             deletedURIs.add(doc.getKey());
             this.docStoreHashTable.put(doc.getKey(), null);
             totallyDeleteDocumentInTrie(doc);
             totallyDeleteDocumentInMetaMap(doc);
-            doc.setLastUseTime(System.nanoTime());
+            doc.setLastUseTime(currentNanoTime);
             this.recentlyUsedDocumentsHeapImpl.reHeapify(doc);
         }
         this.commandStack.push(commandSet);
