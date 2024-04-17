@@ -24,7 +24,6 @@ import java.util.HashSet;
 
 import java.util.function.Consumer;
 
-import javax.print.Doc;
 
 public class DocumentStoreImpl implements DocumentStore {
     private HashTable<URI, Document> docStoreHashTable;
