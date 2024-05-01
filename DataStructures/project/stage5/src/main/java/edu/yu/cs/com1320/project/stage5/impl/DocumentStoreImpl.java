@@ -259,7 +259,7 @@ public class DocumentStoreImpl implements DocumentStore {
         Undoable nextCommand = this.commandStack.pop();
         while (true) {
             if (nextCommand == null) {
-                continue;
+                throw new IllegalStateException();
             } else if (nextCommand instanceof GenericCommand
                     && ((GenericCommand<URI>) nextCommand).getTarget().equals(uri)) {
                 nextCommand = (GenericCommand<URI>) nextCommand;
@@ -313,6 +313,17 @@ public class DocumentStoreImpl implements DocumentStore {
         return docs;
     }
 
+    private List<Document> searchPrivateNoFrills(String keyword) {
+        List<Document> docs = this.wordOccurenceTrie.getSorted(keyword, new Comparator<Document>() {
+            @Override
+            public int compare(Document doc1, Document doc2) {
+                return doc2.wordCount(keyword) - doc1.wordCount(keyword);
+            }
+        });
+        return docs;
+    }
+
+
     /**
      * Retrieve all documents that contain text which starts with the given prefix
      * Documents are returned in sorted, descending order, sorted by the number of
@@ -336,6 +347,16 @@ public class DocumentStoreImpl implements DocumentStore {
         }
         return docs;
     }
+    private List<Document> searchByPrefixprivateNoFrills(String keywordPrefix) {
+        List<Document> docs = this.wordOccurenceTrie.getAllWithPrefixSorted(keywordPrefix, new Comparator<Document>() {
+            @Override
+            public int compare(Document doc1, Document doc2) {
+                return prefixCount(doc2, keywordPrefix) - prefixCount(doc1, keywordPrefix);
+            }
+        });
+        return docs;
+    }
+
 
     private int prefixCount(Document doc, String prefix) {
         String[] wordList = doc.getDocumentTxt().replaceAll("[^a-zA-Z0-9 ]", "").split(" ");
@@ -460,6 +481,22 @@ public class DocumentStoreImpl implements DocumentStore {
         }
         return new ArrayList<>(docs);
     }
+    public List<Document> searchByMetadataPrivateNoFrills(Map<String, String> keysValues){
+        Set<Document> docs = new HashSet<>(this.docStoreHashTable.values());
+        for (Map.Entry<String, String> entry : keysValues.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            Set<Document> tempSet = new HashSet<>();
+            for (Document doc : docs) {
+                if (doc.getMetadata().containsKey(key) && doc.getMetadata().get(key).equals(value)) {
+                    tempSet.add(doc);
+                }
+            }
+            docs.retainAll(tempSet); // Retain documents that match the current key-value pair
+        }
+        return new ArrayList<>(docs);
+    }
+    
 
     /**
      * Retrieve all documents whose text contains the given keyword AND which has
@@ -474,8 +511,8 @@ public class DocumentStoreImpl implements DocumentStore {
      */
     // should be a union of two prev methods
     public List<Document> searchByKeywordAndMetadata(String keyword, Map<String, String> keysValues) {
-        List<Document> keywordMatches = search(keyword);
-        List<Document> metadataMatches = searchByMetadata(keysValues);
+        List<Document> keywordMatches = searchPrivateNoFrills(keyword);
+        List<Document> metadataMatches = searchByMetadataPrivateNoFrills(keysValues);
         keywordMatches.retainAll(metadataMatches);
         // TODO check that order is maintained
         long currentNanoTime = System.nanoTime();
@@ -498,8 +535,8 @@ public class DocumentStoreImpl implements DocumentStore {
      */
     // should be a union of two prev methods
     public List<Document> searchByPrefixAndMetadata(String keywordPrefix, Map<String, String> keysValues) {
-        List<Document> prefixMatches = searchByPrefix(keywordPrefix);
-        List<Document> metadataMatches = searchByMetadata(keysValues);
+        List<Document> prefixMatches = searchByPrefixprivateNoFrills(keywordPrefix);
+        List<Document> metadataMatches = searchByMetadataPrivateNoFrills(keysValues);
         prefixMatches.retainAll(metadataMatches);
         // TODO check that order is maintained
         long currentNanoTime = System.nanoTime();
