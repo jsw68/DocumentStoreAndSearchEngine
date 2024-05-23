@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import edu.yu.cs.com1320.project.stage6.Document;
+import edu.yu.cs.com1320.project.stage6.impl.DocumentImpl;
 import edu.yu.cs.com1320.project.stage6.PersistenceManager;
 
 public class DocumentPersistenceManager implements PersistenceManager<URI, Document> {
@@ -105,6 +106,7 @@ public class DocumentPersistenceManager implements PersistenceManager<URI, Docum
         if (!(val instanceof Document)) {
             throw new IllegalArgumentException();
         }
+        val = (DocumentImpl) val;
         try {
             GsonBuilder builder = new GsonBuilder();
             builder.registerTypeAdapter(DocumentImpl.class, new DocumentSerializer());
@@ -112,10 +114,14 @@ public class DocumentPersistenceManager implements PersistenceManager<URI, Docum
             Path path = Paths.get(fileName);
             Files.createDirectories(path.getParent());
             File file = new File(fileName);
+            // System.out.println(file.getAbsolutePath());
             file.createNewFile();
             Writer writer = new FileWriter(file);
             gson.toJson(val, writer);
             writer.close();
+            // System.out.println(fileExists(fileName) + "exists in serialize");
+            // System.out.println("aksfjb");
+            // System.out.println(fileName);
         } catch (Exception e) {
             throw new IOException(e);
         }
@@ -124,10 +130,11 @@ public class DocumentPersistenceManager implements PersistenceManager<URI, Docum
     public Document deserialize(URI key) throws IOException {
         String fileName = getFileName(key);
         if (!fileExists(fileName)) {
+            // System.out.println("File does not exist");
             return null;
         }
-        System.out.println(fileName);
-        System.out.println(fileExists(fileName));
+        // System.out.println(fileName);
+        // System.out.println("File does exist");
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(DocumentImpl.class, new DocumentDeserializer());
         Gson gson = builder.create();
@@ -160,8 +167,8 @@ public class DocumentPersistenceManager implements PersistenceManager<URI, Docum
         if (uri.startsWith("https://")) {
             uri = uri.substring(8);
         }
-        if (!this.dir.endsWith("/")) {
-            this.dir = this.dir + "/";
+        if (!this.dir.endsWith(File.separator)) {
+            this.dir = this.dir + File.separator;
         }
         String fileName = this.dir + uri + ".json";
         return fileName;
@@ -169,7 +176,7 @@ public class DocumentPersistenceManager implements PersistenceManager<URI, Docum
 
     private boolean fileExists(String fileName) {
         File file = new File(fileName);
-        return file.exists();
+        return file.isFile();
     }
 
     private void removeFileAndParentsIfEmpty(Path path) throws IOException {

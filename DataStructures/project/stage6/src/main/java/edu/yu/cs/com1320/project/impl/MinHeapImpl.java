@@ -27,9 +27,9 @@ public class MinHeapImpl<E extends Comparable<E>> extends MinHeap<E>{
                 return i;
             }
         }
-        System.out.println("Element not found");
-        System.out.println(element);
-        System.out.println(this.elements);
+        // System.out.println("Element not found");
+        // System.out.println(element);
+        // System.out.println(this.elements);
         return -1;
     }
 

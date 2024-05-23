@@ -28,8 +28,6 @@ import java.util.HashSet;
 
 import java.util.function.Consumer;
 
-import javax.print.Doc;
-
 public class DocumentStoreImpl implements DocumentStore {
     private BTree<URI, Document> docStorageTree;
     private StackImpl<Undoable> commandStack;
@@ -263,7 +261,7 @@ public class DocumentStoreImpl implements DocumentStore {
     }
 
     @Override
-    public Document get(URI uri) {
+    public Document get(URI uri) throws IOException{
         Document doc = this.docStorageTree.get(uri);
         if (doc == null) {
             return null;
@@ -275,7 +273,7 @@ public class DocumentStoreImpl implements DocumentStore {
     }
 
     @Override
-    public String setMetadata(URI uri, String key, String value) {
+    public String setMetadata(URI uri, String key, String value) throws IOException {
         if (uri == null || uri.toString().isEmpty() || key == null || key.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -329,7 +327,7 @@ public class DocumentStoreImpl implements DocumentStore {
     // }
 
     @Override
-    public String getMetadata(URI uri, String key) {
+    public String getMetadata(URI uri, String key) throws IOException{
         if (uri == null || uri.toString().isEmpty() || key == null || key.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -477,7 +475,7 @@ public class DocumentStoreImpl implements DocumentStore {
      * @param keyword
      * @return a List of the matches. If there are no matches, return an empty list.
      */
-    public List<Document> search(String keyword) {
+    public List<Document> search(String keyword) throws IOException{
         List<DocumentPlaceholder> docs = this.wordOccurenceTrie.getSorted(keyword,
                 new Comparator<DocumentPlaceholder>() {
                     @Override
@@ -525,7 +523,7 @@ public class DocumentStoreImpl implements DocumentStore {
      * @param keywordPrefix
      * @return a List of the matches. If there are no matches, return an empty list.
      */
-    public List<Document> searchByPrefix(String keywordPrefix) {
+    public List<Document> searchByPrefix(String keywordPrefix) throws IOException{
         List<Document> docs = this.searchByPrefixprivateNoFrills(keywordPrefix);
         long currentNanoTime = System.nanoTime();
         for (Document doc : docs) {
@@ -677,7 +675,7 @@ public class DocumentStoreImpl implements DocumentStore {
      *         values for the given keys. If no documents contain all the given
      *         key-value pairs, return an empty list.
      */
-    public List<Document> searchByMetadata(Map<String, String> keysValues) {
+    public List<Document> searchByMetadata(Map<String, String> keysValues) throws IOException{
         List<Document> docs = this.searchByMetadataPrivateNoFrills(keysValues);
         long currentNanoTime = System.nanoTime();
         for (Document doc : docs) {
@@ -693,8 +691,8 @@ public class DocumentStoreImpl implements DocumentStore {
         boolean first = true;
         for (Map.Entry<String, String> entry : keysValues.entrySet()) {
             Set<DocumentPlaceholder> tempSet = this.metadataToDocHashMap.get(entry);
-            System.out.println("meta initial" + tempSet);
-            System.out.println(this.metadataToDocHashMap);
+            // System.out.println("meta initial" + tempSet);
+            // System.out.println(this.metadataToDocHashMap);
             if (tempSet == null) {
                 return new ArrayList<>();
             }
@@ -724,7 +722,7 @@ public class DocumentStoreImpl implements DocumentStore {
      * @return a List of the matches. If there are no matches, return an empty list.
      */
     // should be a union of two prev methods
-    public List<Document> searchByKeywordAndMetadata(String keyword, Map<String, String> keysValues) {
+    public List<Document> searchByKeywordAndMetadata(String keyword, Map<String, String> keysValues) throws IOException{
         List<Document> keywordMatches = searchPrivateNoFrills(keyword);
         List<Document> metadataMatches = searchByMetadataPrivateNoFrills(keysValues);
         keywordMatches.retainAll(metadataMatches);
@@ -748,7 +746,7 @@ public class DocumentStoreImpl implements DocumentStore {
      * @return a List of the matches. If there are no matches, return an empty list.
      */
     // should be a union of two prev methods
-    public List<Document> searchByPrefixAndMetadata(String keywordPrefix, Map<String, String> keysValues) {
+    public List<Document> searchByPrefixAndMetadata(String keywordPrefix, Map<String, String> keysValues) throws IOException{
         List<Document> prefixMatches = searchByPrefixprivateNoFrills(keywordPrefix);
         List<Document> metadataMatches = searchByMetadataPrivateNoFrills(keysValues);
         prefixMatches.retainAll(metadataMatches);
@@ -769,7 +767,7 @@ public class DocumentStoreImpl implements DocumentStore {
      * 
      * @return a Set of URIs of the documents that were deleted.
      */
-    public Set<URI> deleteAllWithMetadata(Map<String, String> keysValues) {
+    public Set<URI> deleteAllWithMetadata(Map<String, String> keysValues) throws IOException{
         List<Document> targetDocs = searchByMetadata(keysValues);
         Set<URI> deletedURIs = new HashSet<URI>();
         CommandSet<URI> commandSet = new CommandSet<URI>();
@@ -831,7 +829,7 @@ public class DocumentStoreImpl implements DocumentStore {
      * @param keyword
      * @return a Set of URIs of the documents that were deleted.
      */
-    public Set<URI> deleteAllWithKeywordAndMetadata(String keyword, Map<String, String> keysValues) {
+    public Set<URI> deleteAllWithKeywordAndMetadata(String keyword, Map<String, String> keysValues) throws IOException{
         // UNDO functionality not yet implemented
         List<Document> targetDocs = searchByKeywordAndMetadata(keyword, keysValues);
         Set<URI> deletedURIs = new HashSet<URI>();
@@ -877,7 +875,7 @@ public class DocumentStoreImpl implements DocumentStore {
      * @param keywordPrefix
      * @return a Set of URIs of the documents that were deleted.
      */
-    public Set<URI> deleteAllWithPrefixAndMetadata(String keywordPrefix, Map<String, String> keysValues) {
+    public Set<URI> deleteAllWithPrefixAndMetadata(String keywordPrefix, Map<String, String> keysValues) throws IOException{
         // UNDO functionality not yet implemented
         List<Document> targetDocs = searchByPrefixAndMetadata(keywordPrefix, keysValues);
         Set<URI> deletedURIs = new HashSet<URI>();
