@@ -1,4 +1,4 @@
-package edu.yu.cs.com1320.project.stage5;
+package edu.yu.cs.com1320.project.stage6;
 
 
 import org.junit.jupiter.api.Test;
@@ -11,8 +11,8 @@ import java.util.HashSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.net.URI;
-import edu.yu.cs.com1320.project.stage5.impl.DocumentImpl;
-import edu.yu.cs.com1320.project.stage5.Document;
+import edu.yu.cs.com1320.project.stage6.impl.DocumentImpl;
+import edu.yu.cs.com1320.project.stage6.Document;
 import org.junit.jupiter.api.BeforeEach;  
 
 public class DocumentTest {
@@ -24,7 +24,7 @@ public class DocumentTest {
     @BeforeEach
     public void beforeEach(){
         this.binaryData = "bytedoc".getBytes();
-        this.StringDoc = new DocumentImpl(URI.create("string"), "Stringdoc") ;
+        this.StringDoc = new DocumentImpl(URI.create("string"), "Stringdoc", null) ;
         this.ByteDoc = new DocumentImpl(URI.create("byte"), this.binaryData);
         this.StringDoc.setMetadataValue("string1 meta key", "string1 meta value");
         this.ByteDoc.setMetadataValue("byte1 meta key", "byte1 meta value");
@@ -82,10 +82,10 @@ public class DocumentTest {
     @Test
     public void nullTest(){
         // constructor string tests
-        assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(null, "txt"));
+        assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(null, "txt", null));
         assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(URI.create("string"), "".getBytes()));
-        assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(URI.create("string"), ""));
-        assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(URI.create(""), "txt"));
+        assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(URI.create("string"), "", null));
+        assertThrows(IllegalArgumentException.class, () -> new DocumentImpl(URI.create(""), "txt", null));
 
         //setMetadataValue null tests
         assertThrows(IllegalArgumentException.class, () -> this.StringDoc.setMetadataValue(null, "value"));
@@ -103,16 +103,16 @@ public class DocumentTest {
     @Test
     public void wordCountTest(){
         String word = "tesdt";
-        Document doc = new DocumentImpl(URI.create("word"), word);
+        Document doc = new DocumentImpl(URI.create("word"), word, null);
         for (int i = 0; i < 10; i++){
             assertEquals(i, doc.wordCount("word"));
             assertEquals(i, doc.wordCount("hello"));
             assertEquals(0, doc.wordCount("hell"));
             word += " word hello";
-            doc = new DocumentImpl(URI.create("word"), word);
+            doc = new DocumentImpl(URI.create("word"), word, null);
         }
         word += "  final";
-        doc = new DocumentImpl(URI.create("word"), word);
+        doc = new DocumentImpl(URI.create("word"), word, null);
         assertEquals(1, doc.wordCount("final"));
         assertEquals(0, this.ByteDoc.wordCount("word"));
     }
@@ -123,7 +123,7 @@ public class DocumentTest {
         Set<String> wordSet = new HashSet<>();
         String word = "test";
         wordSet.add("test");
-        Document doc = new DocumentImpl(URI.create("word"), word);
+        Document doc = new DocumentImpl(URI.create("word"), word, null);
         wordSet.add("word");
         wordSet.add("hello");
         for (int i = 0; i < 10; i++){
@@ -131,12 +131,12 @@ public class DocumentTest {
             assertEquals(i, doc.wordCount("hello"));
             assertEquals(0, doc.wordCount("hell"));
             word += " word hello";
-            doc = new DocumentImpl(URI.create("word"), word);
+            doc = new DocumentImpl(URI.create("word"), word, null);
             assertEquals(wordSet, doc.getWords());
         }
         word += "  final";
         wordSet.add("final");
-        doc = new DocumentImpl(URI.create("word"), word);
+        doc = new DocumentImpl(URI.create("word"), word, null);
         assertEquals(1, doc.wordCount("final"));
         assertEquals(0, this.ByteDoc.wordCount("word"));
         assertEquals(wordSet, doc.getWords());

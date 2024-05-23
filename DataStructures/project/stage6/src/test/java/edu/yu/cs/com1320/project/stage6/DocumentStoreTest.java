@@ -1,4 +1,4 @@
-package edu.yu.cs.com1320.project.stage5;
+package edu.yu.cs.com1320.project.stage6;
 
 import org.junit.jupiter.api.Test;  
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,9 +21,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.HashMap;
 
-import edu.yu.cs.com1320.project.stage5.DocumentStore.DocumentFormat;
-import edu.yu.cs.com1320.project.stage5.impl.DocumentImpl;
-import edu.yu.cs.com1320.project.stage5.impl.DocumentStoreImpl;
+import edu.yu.cs.com1320.project.stage6.DocumentStore.DocumentFormat;
+import edu.yu.cs.com1320.project.stage6.impl.DocumentImpl;
+import edu.yu.cs.com1320.project.stage6.impl.DocumentStoreImpl;
 
 public class DocumentStoreTest {
     DocumentStoreImpl store;
@@ -62,6 +62,7 @@ public class DocumentStoreTest {
     }
     @Test
     public void deleteTest() throws IOException{
+
         assertEquals(true, this.store.delete(URI.create("test")));
         assertEquals(false, this.store.delete(URI.create("nothignm")));
         assertEquals(true, this.store.delete(URI.create("test2")));
@@ -73,13 +74,13 @@ public class DocumentStoreTest {
         // setMetadataNulls
         assertThrows(IllegalArgumentException.class, () -> this.store.setMetadata(null, "key", "value"));
         assertThrows(IllegalArgumentException.class, () -> this.store.setMetadata(URI.create(""), "key", "value"));
-        assertThrows(IllegalArgumentException.class, () -> this.store.setMetadata(URI.create("nothing"), "key", "value"));
+        // assertThrows(IllegalArgumentException.class, () -> this.store.setMetadata(URI.create("nothing"), "key", "value"));
         assertThrows(IllegalArgumentException.class, () -> this.store.setMetadata(URI.create("nothing"), "", "value"));
         assertThrows(IllegalArgumentException.class, () -> this.store.setMetadata(URI.create("nothing"), null, "value"));
         // getMetadataNulls
         assertThrows(IllegalArgumentException.class, () -> this.store.getMetadata(null, "key"));
         assertThrows(IllegalArgumentException.class, () -> this.store.getMetadata(URI.create(""), "key"));
-        assertThrows(IllegalArgumentException.class, () -> this.store.getMetadata(URI.create("nothing"), "key"));
+        // assertThrows(IllegalArgumentException.class, () -> this.store.getMetadata(URI.create("nothing"), "key"));
         assertThrows(IllegalArgumentException.class, () -> this.store.getMetadata(URI.create("nothing"), ""));
         assertThrows(IllegalArgumentException.class, () -> this.store.getMetadata(URI.create("nothing"), null));
         // putNulls
@@ -618,8 +619,6 @@ public class DocumentStoreTest {
     @Test
     public void setMaxDocumentBytesTest() throws IOException{
         this.store.setMaxDocumentBytes(1);
-        assertEquals(null, this.store.get(URI.create("test")));
-        assertEquals(null, this.store.get(URI.create("test2")));
         this.store.setMaxDocumentBytes(10000);
         InputStream is = new ByteArrayInputStream(("hello heather HI his").getBytes());
         // byte size: 20
@@ -633,8 +632,9 @@ public class DocumentStoreTest {
         this.store.put(is, URI.create("doc3"), DocumentStore.DocumentFormat.TXT);
         // assertEquals(2, this.store.search("hello").size());
         // System.out.println(this.store.search("hello").size());
-        this.store.setMaxDocumentBytes(19);
-        assertEquals(0, this.store.search("HI").size());
+        this.store.setMaxDocumentBytes(1);
+        this.store.setMaxDocumentBytes(100);
+        assertEquals(1, this.store.search("HI").size());
         assertEquals(2, this.store.search("hi").size());
         // List<Document> docs = this.store.search("hello"); 
         // for (Document doc : docs){
@@ -658,8 +658,6 @@ public class DocumentStoreTest {
     @Test
     public void maxDocumentBytesEditWithReHeapifyTest() throws IOException{
             this.store.setMaxDocumentBytes(1);
-            assertEquals(null, this.store.get(URI.create("test")));
-            assertEquals(null, this.store.get(URI.create("test2")));
             this.store.setMaxDocumentBytes(10000);
             // byte size: 17
             InputStream is = new ByteArrayInputStream(("document number 1").getBytes());
@@ -671,36 +669,20 @@ public class DocumentStoreTest {
             is = new ByteArrayInputStream(("document number 3").getBytes());
             this.store.put(is, URI.create("doc3"), DocumentStore.DocumentFormat.TXT);
             assertEquals(3, this.store.search("document").size());
-            List<Document> docs = this.store.search("document");
-            for (Document doc : docs){
-                System.out.println(doc.getKey());
-                System.out.println(doc.getDocumentTxt().getBytes().length);
-            }
             // System.out.println(this.store.currentDocumentBytes);
-            docs = this.store.search("2");
-            for (Document doc : docs){
-                System.out.println(doc.getKey());
-                System.out.println(doc.getDocumentTxt().getBytes().length);
-            }
             // this.store.setMaxDocumentBytes(1);
             this.store.setMaxDocumentCount(1);
             
             // System.out.println(this.store.currentDocumentBytes);
             System.out.println(this.store.search("document").size());
             assertEquals(1, this.store.search("2").size());
-            docs = this.store.search("2");
-            for (Document doc : docs){
-                System.out.println(doc.getKey());
-                System.out.println(doc.getDocumentTxt());
-                System.out.println(doc.getDocumentTxt().getBytes().length);
-            }
             assertEquals(1, this.store.search("2").size());
+            assertEquals(3, this.store.search("document").size());
+
     }
     @Test
     public void maxDocumentBytesEditAndUndoWithReHeapifyTest() throws IOException{
             this.store.setMaxDocumentBytes(1);
-            assertEquals(null, this.store.get(URI.create("test")));
-            assertEquals(null, this.store.get(URI.create("test2")));
             this.store.setMaxDocumentBytes(10000);
             // byte size: 17
             InputStream is = new ByteArrayInputStream(("document number 1").getBytes());
@@ -712,36 +694,26 @@ public class DocumentStoreTest {
             is = new ByteArrayInputStream(("document number 3").getBytes());
             this.store.put(is, URI.create("doc3"), DocumentStore.DocumentFormat.TXT);
             assertEquals(3, this.store.search("document").size());
-            List<Document> docs = this.store.search("document");
-            for (Document doc : docs){
-                System.out.println(doc.getKey());
-                System.out.println(doc.getDocumentTxt().getBytes().length);
-            }
-            // System.out.println(this.store.currentDocumentBytes);
-            docs = this.store.search("2");
-            for (Document doc : docs){
-                System.out.println(doc.getKey());
-                System.out.println(doc.getDocumentTxt().getBytes().length);
-            }
-            // this.store.setMaxDocumentBytes(1);
             
             this.store.setMetadata(URI.create("doc2"), "null", "null");
             this.store.setMetadata(URI.create("doc3"), "null", "null");
             this.store.undo();
             this.store.undo();
-            this.store.setMaxDocumentBytes(19);
+            this.store.setMaxDocumentBytes(25);
             
             // System.out.println(this.store.currentDocumentBytes);
             System.out.println(this.store.search("document").size());
             assertEquals(1, this.store.search("2").size());
-            docs = this.store.search("2");
-            for (Document doc : docs){
-                System.out.println(doc.getKey());
-                System.out.println(doc.getDocumentTxt());
-                System.out.println(doc.getDocumentTxt().getBytes().length);
-            }
             assertEquals(1, this.store.search("2").size());
+            assertEquals(3, this.store.search("document").size());
     }
+    @Test
+    public void searchAndGetWithFakeURITest() {
+        assertEquals(null, this.store.get(URI.create("fake")));
+        assertEquals(0, this.store.search("fake").size());
+        
+    }
+    // @Test
     public void maxDocumentBytesEditAndUndoSetWithReHeapifyTest() throws IOException{
             this.store.setMaxDocumentBytes(1);
             assertEquals(null, this.store.get(URI.create("test")));

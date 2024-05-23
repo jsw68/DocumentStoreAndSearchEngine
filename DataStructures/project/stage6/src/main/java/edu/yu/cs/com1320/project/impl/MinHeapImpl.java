@@ -4,7 +4,7 @@ import java.util.NoSuchElementException;
 import edu.yu.cs.com1320.project.MinHeap;
 
 public class MinHeapImpl<E extends Comparable<E>> extends MinHeap<E>{
-    private E[] elements;
+    public E[] elements;
     private int startingArryLength = 10;
     public MinHeapImpl(){
         this.elements = (E[])new Comparable[startingArryLength];
@@ -27,6 +27,9 @@ public class MinHeapImpl<E extends Comparable<E>> extends MinHeap<E>{
                 return i;
             }
         }
+        System.out.println("Element not found");
+        System.out.println(element);
+        System.out.println(this.elements);
         return -1;
     }
 
