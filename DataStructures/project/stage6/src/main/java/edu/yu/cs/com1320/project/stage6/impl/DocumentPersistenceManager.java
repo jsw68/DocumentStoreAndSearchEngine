@@ -34,6 +34,7 @@ import edu.yu.cs.com1320.project.stage6.PersistenceManager;
 
 public class DocumentPersistenceManager implements PersistenceManager<URI, Document> {
     private String dir;
+    private Path myPath;
 
     private class DocumentSerializer implements JsonSerializer<Document> {
         @Override
@@ -94,15 +95,18 @@ public class DocumentPersistenceManager implements PersistenceManager<URI, Docum
 
     public DocumentPersistenceManager(File baseDir) {
         if (baseDir == null) {
-            this.dir = System.getProperty("user.dir");
+            this.dir = new File(System.getProperty("user.dir")).getAbsolutePath();
+            this.myPath = Paths.get(System.getProperty("user.dir"));
             ;
         } else {
+            this.myPath = baseDir.toPath();
             this.dir = baseDir.getName();
         }
+        // System.out.println("Created DocumentPersistenceManager with baseDir: " + this.myPath.toString());
     }
 
     public void serialize(URI key, Document val) throws IOException {
-        String fileName = getFileName(key);
+        Path path = getFilePath(key);
         if (!(val instanceof Document)) {
             throw new IllegalArgumentException();
         }
@@ -111,24 +115,21 @@ public class DocumentPersistenceManager implements PersistenceManager<URI, Docum
             GsonBuilder builder = new GsonBuilder();
             builder.registerTypeAdapter(DocumentImpl.class, new DocumentSerializer());
             Gson gson = builder.create();
-            Path path = Paths.get(fileName);
             Files.createDirectories(path.getParent());
-            File file = new File(fileName);
-            // System.out.println(file.getAbsolutePath());
+            File file = path.toFile();
             file.createNewFile();
             Writer writer = new FileWriter(file);
             gson.toJson(val, writer);
             writer.close();
-            // System.out.println(fileExists(fileName) + "exists in serialize");
             // System.out.println("aksfjb");
-            // System.out.println(fileName);
+            // System.out.println(fileName.toS);
         } catch (Exception e) {
             throw new IOException(e);
         }
     }
 
     public Document deserialize(URI key) throws IOException {
-        String fileName = getFileName(key);
+        Path fileName = getFilePath(key);
         if (!fileExists(fileName)) {
             // System.out.println("File does not exist");
             return null;
@@ -138,7 +139,7 @@ public class DocumentPersistenceManager implements PersistenceManager<URI, Docum
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(DocumentImpl.class, new DocumentDeserializer());
         Gson gson = builder.create();
-        JsonReader reader = new JsonReader(new FileReader(fileName));
+        JsonReader reader = new JsonReader(new FileReader(fileName.toFile()));
         Document val = gson.fromJson(reader, DocumentImpl.class);
         reader.close();
         delete(key);
@@ -153,30 +154,31 @@ public class DocumentPersistenceManager implements PersistenceManager<URI, Docum
      * @throws IOException
      */
     public boolean delete(URI key) throws IOException {
-        String fileName = getFileName(key);
+        Path fileName = getFilePath(key);
         if (!fileExists(fileName)) {
             return false;
         }
-        Path path = Paths.get(fileName);
-        removeFileAndParentsIfEmpty(path);
+        removeFileAndParentsIfEmpty(fileName);
         return true;
     }
 
-    private String getFileName(URI key) {
+    private Path getFilePath(URI key) {
         String uri = key.toString();
-        if (uri.startsWith("https://")) {
-            uri = uri.substring(8);
+        if (uri.startsWith("http://")) {
+            uri = uri.substring(7);
         }
-        if (!this.dir.endsWith(File.separator)) {
-            this.dir = this.dir + File.separator;
-        }
-        String fileName = this.dir + uri + ".json";
-        return fileName;
+        Path combinedPath = this.myPath.resolve(uri+".json");
+        // System.out.println("Combined path: " + combinedPath.toString());
+        // if (!this.dir.endsWith(File.separator)) {
+        //     this.dir = this.dir + File.separator;
+        // }
+        // String fileName = this.dir + uri + ".json";
+        // System.out.println("Created file name: " + fileName);
+        return combinedPath;
     }
 
-    private boolean fileExists(String fileName) {
-        File file = new File(fileName);
-        return file.isFile();
+    private boolean fileExists(Path fileName) {
+        return Files.isRegularFile(fileName);
     }
 
     private void removeFileAndParentsIfEmpty(Path path) throws IOException {

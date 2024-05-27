@@ -4,7 +4,7 @@ import java.util.NoSuchElementException;
 import edu.yu.cs.com1320.project.MinHeap;
 
 public class MinHeapImpl<E extends Comparable<E>> extends MinHeap<E>{
-    public E[] elements;
+    private E[] elements;
     private int startingArryLength = 10;
     public MinHeapImpl(){
         this.elements = (E[])new Comparable[startingArryLength];
@@ -30,6 +30,7 @@ public class MinHeapImpl<E extends Comparable<E>> extends MinHeap<E>{
         // System.out.println("Element not found");
         // System.out.println(element);
         // System.out.println(this.elements);
+        // System.out.println("Count: " + this.elements.length);
         return -1;
     }
 
@@ -45,6 +46,7 @@ public class MinHeapImpl<E extends Comparable<E>> extends MinHeap<E>{
        /**
      * is elements[i] > elements[j]?
      */
+    @Override
     protected boolean isGreater(int i, int j) {
         return this.elements[i].compareTo(this.elements[j]) > 0;
     }
@@ -52,6 +54,7 @@ public class MinHeapImpl<E extends Comparable<E>> extends MinHeap<E>{
     /**
      * swap the values stored at elements[i] and elements[j]
      */
+    @Override
     protected void swap(int i, int j) {
         E temp = this.elements[i];
         this.elements[i] = this.elements[j];
@@ -62,6 +65,7 @@ public class MinHeapImpl<E extends Comparable<E>> extends MinHeap<E>{
      * while the key at index k is less than its
      * parent's key, swap its contents with its parent’s
      */
+    @Override
     protected void upHeap(int k) {
         while (k > 1 && this.isGreater(k / 2, k)) {
             this.swap(k, k / 2);
@@ -73,6 +77,7 @@ public class MinHeapImpl<E extends Comparable<E>> extends MinHeap<E>{
      * move an element down the heap until it is less than
      * both its children or is at the bottom of the heap
      */
+    @Override
     protected void downHeap(int k) {
         while (2 * k <= this.count) {
             //identify which of the 2 children are smaller
@@ -89,7 +94,7 @@ public class MinHeapImpl<E extends Comparable<E>> extends MinHeap<E>{
             k = j;
         }
     }
-
+    @Override
     public void insert(E x) {
         // double size of array if necessary
         if (this.count >= this.elements.length - 1) {
@@ -100,11 +105,15 @@ public class MinHeapImpl<E extends Comparable<E>> extends MinHeap<E>{
         //percolate it up to maintain heap order property
         this.upHeap(this.count);
     }
-
+    @Override
     public E peek(){
         return this.elements[1];
     }
-
+    @Override
+    protected boolean isEmpty() {
+        return this.count == 0;
+    }
+    @Override
     public E remove() {
         if (isEmpty()) {
             throw new NoSuchElementException("Heap is empty");

@@ -117,6 +117,7 @@ public class DocumentStoreImpl implements DocumentStore {
                 docsOnDisk.remove(this.uri);
                 doc.setLastUseTime(System.nanoTime());
                 recentlyUsedDocumentsHeapImpl.insert(this);
+                // System.out.println("Inserted " + this);
                 recentlyUsedDocumentsHeapImpl.reHeapify(this);
                 currentDocumentCount++;
                 Integer docSize;
@@ -128,6 +129,7 @@ public class DocumentStoreImpl implements DocumentStore {
                 if (docSize > maxDocumentBytes) {
                     throw new IllegalArgumentException("Document is too large to fit in memory");
                 }
+                currentDocumentBytes += docSize;
                 wipeDocumentsUntilSpaceAvailable();
                 return doc;
             }
@@ -217,6 +219,7 @@ public class DocumentStoreImpl implements DocumentStore {
             previousDocPlaceholder = DocToPlaceholder(doc);
             previous = this.docStorageTree.put(uri, doc);
             this.recentlyUsedDocumentsHeapImpl.insert(previousDocPlaceholder);
+            // System.out.println("Inserted " + previousDocPlaceholder);
             doc.setLastUseTime(System.nanoTime());
             this.recentlyUsedDocumentsHeapImpl.reHeapify(previousDocPlaceholder);
         }
@@ -475,6 +478,7 @@ public class DocumentStoreImpl implements DocumentStore {
      * @param keyword
      * @return a List of the matches. If there are no matches, return an empty list.
      */
+    @Override
     public List<Document> search(String keyword) throws IOException{
         List<DocumentPlaceholder> docs = this.wordOccurenceTrie.getSorted(keyword,
                 new Comparator<DocumentPlaceholder>() {
@@ -523,6 +527,7 @@ public class DocumentStoreImpl implements DocumentStore {
      * @param keywordPrefix
      * @return a List of the matches. If there are no matches, return an empty list.
      */
+    @Override
     public List<Document> searchByPrefix(String keywordPrefix) throws IOException{
         List<Document> docs = this.searchByPrefixprivateNoFrills(keywordPrefix);
         long currentNanoTime = System.nanoTime();
@@ -570,6 +575,7 @@ public class DocumentStoreImpl implements DocumentStore {
      * @param keyword
      * @return a Set of URIs of the documents that were deleted.
      */
+    @Override
     public Set<URI> deleteAll(String keyword) {
         Set<DocumentPlaceholder> targetDocsPlaceholders = this.wordOccurenceTrie.get(keyword);
         ArrayList<Document> targetDocs = new ArrayList<>();
@@ -599,7 +605,6 @@ public class DocumentStoreImpl implements DocumentStore {
         this.commandStack.push(commandSet);
         return deletedURIs;
     }
-
     private void deleteAllHelper(Set<URI> URIs) {
         long currentNanoTime = System.nanoTime();
         for (URI uri : URIs) {
@@ -627,6 +632,7 @@ public class DocumentStoreImpl implements DocumentStore {
      * @param keywordPrefix
      * @return a Set of URIs of the documents that were deleted.
      */
+    @Override
     public Set<URI> deleteAllWithPrefix(String keywordPrefix) {
         // UNDO functionality not yet implemented
         List<DocumentPlaceholder> targetDocsPlaceholders = this.wordOccurenceTrie.getAllWithPrefixSorted(keywordPrefix,
@@ -675,6 +681,7 @@ public class DocumentStoreImpl implements DocumentStore {
      *         values for the given keys. If no documents contain all the given
      *         key-value pairs, return an empty list.
      */
+    @Override
     public List<Document> searchByMetadata(Map<String, String> keysValues) throws IOException{
         List<Document> docs = this.searchByMetadataPrivateNoFrills(keysValues);
         long currentNanoTime = System.nanoTime();
@@ -685,8 +692,7 @@ public class DocumentStoreImpl implements DocumentStore {
         }
         return new ArrayList<>(docs);
     }
-
-    public List<Document> searchByMetadataPrivateNoFrills(Map<String, String> keysValues) {
+    private List<Document> searchByMetadataPrivateNoFrills(Map<String, String> keysValues) {
         List<DocumentPlaceholder> docs = new ArrayList<>();
         boolean first = true;
         for (Map.Entry<String, String> entry : keysValues.entrySet()) {
@@ -722,6 +728,7 @@ public class DocumentStoreImpl implements DocumentStore {
      * @return a List of the matches. If there are no matches, return an empty list.
      */
     // should be a union of two prev methods
+    @Override
     public List<Document> searchByKeywordAndMetadata(String keyword, Map<String, String> keysValues) throws IOException{
         List<Document> keywordMatches = searchPrivateNoFrills(keyword);
         List<Document> metadataMatches = searchByMetadataPrivateNoFrills(keysValues);
@@ -746,6 +753,7 @@ public class DocumentStoreImpl implements DocumentStore {
      * @return a List of the matches. If there are no matches, return an empty list.
      */
     // should be a union of two prev methods
+    @Override
     public List<Document> searchByPrefixAndMetadata(String keywordPrefix, Map<String, String> keysValues) throws IOException{
         List<Document> prefixMatches = searchByPrefixprivateNoFrills(keywordPrefix);
         List<Document> metadataMatches = searchByMetadataPrivateNoFrills(keysValues);
@@ -767,6 +775,7 @@ public class DocumentStoreImpl implements DocumentStore {
      * 
      * @return a Set of URIs of the documents that were deleted.
      */
+    @Override
     public Set<URI> deleteAllWithMetadata(Map<String, String> keysValues) throws IOException{
         List<Document> targetDocs = searchByMetadata(keysValues);
         Set<URI> deletedURIs = new HashSet<URI>();
@@ -829,6 +838,7 @@ public class DocumentStoreImpl implements DocumentStore {
      * @param keyword
      * @return a Set of URIs of the documents that were deleted.
      */
+    @Override
     public Set<URI> deleteAllWithKeywordAndMetadata(String keyword, Map<String, String> keysValues) throws IOException{
         // UNDO functionality not yet implemented
         List<Document> targetDocs = searchByKeywordAndMetadata(keyword, keysValues);
@@ -875,6 +885,7 @@ public class DocumentStoreImpl implements DocumentStore {
      * @param keywordPrefix
      * @return a Set of URIs of the documents that were deleted.
      */
+    @Override
     public Set<URI> deleteAllWithPrefixAndMetadata(String keywordPrefix, Map<String, String> keysValues) throws IOException{
         // UNDO functionality not yet implemented
         List<Document> targetDocs = searchByPrefixAndMetadata(keywordPrefix, keysValues);
@@ -919,6 +930,7 @@ public class DocumentStoreImpl implements DocumentStore {
      * @param limit
      * @throws IllegalArgumentException if limit < 1
      */
+    @Override
     public void setMaxDocumentCount(int limit) {
         if (limit < 1) {
             throw new IllegalArgumentException();
@@ -934,6 +946,7 @@ public class DocumentStoreImpl implements DocumentStore {
      * @param limit
      * @throws IllegalArgumentException if limit < 1
      */
+    @Override
     public void setMaxDocumentBytes(int limit) {
         if (limit < 1) {
             throw new IllegalArgumentException();
@@ -955,6 +968,14 @@ public class DocumentStoreImpl implements DocumentStore {
     private void wipeDocumentsUntilSpaceAvailable() {
         while (this.currentDocumentCount > this.maxDocumentCount || this.currentDocumentBytes > this.maxDocumentBytes) {
             Document doc = this.recentlyUsedDocumentsHeapImpl.remove().getDoc();
+            // if (doc == null) {
+            //     System.out.println("Doc has been deleted");
+            //     // continue;
+            // }
+            // if (this.docsOnDisk.contains(doc.getKey())) {
+            //     this.recentlyUsedDocumentsHeapImpl.insert(DocToPlaceholder(doc));
+            //     continue;
+            // }
             if (doc.getDocumentBinaryData() != null) {
                 this.currentDocumentBytes -= doc.getDocumentBinaryData().length;
             } else {

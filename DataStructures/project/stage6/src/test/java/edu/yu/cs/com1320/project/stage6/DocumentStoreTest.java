@@ -11,6 +11,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 // import java.lang.reflect.Array;
+// import thread
+import java.lang.Thread;
+
 
 import org.junit.jupiter.api.BeforeEach;  
 import java.net.URI;
@@ -33,10 +36,10 @@ public class DocumentStoreTest {
     private InputStream input;
     @BeforeEach
     public void Initialize() throws IOException{
-        File file = new File("/Users/jwain/YU Schoolwork/2023/Spring/Data Structures/Project/JSON");
+        File file = new File("/Users/jwain/YU Schoolwork/2023/Spring/Data Structures/Project/Code/Wainberg_Jake_800759404/DataStructures/project/stage6/JSON");
         this.binaryData1 = "myString".getBytes();
         this.binaryData2 = "myString2".getBytes();
-        this.store = new DocumentStoreImpl(file);
+        this.store = new DocumentStoreImpl(null);
         this.input = new ByteArrayInputStream("tester".getBytes());
         InputStream is = new ByteArrayInputStream("myString".getBytes());
         this.store.put(is, URI.create("test"), DocumentStore.DocumentFormat.TXT);
@@ -759,5 +762,158 @@ public class DocumentStoreTest {
                 // System.out.println(doc.getDocumentTxt().getBytes().length);
             }
             assertEquals(1, this.store.search("2").size());
+    }
+
+    @Test
+    public void uniqueURISerializerTest() throws IOException{
+        this.store.setMaxDocumentBytes(1);
+        this.store.setMaxDocumentBytes(10000);
+        InputStream is = new ByteArrayInputStream(("hello heather HI his").getBytes());
+        // byte size: 20
+        this.store.put(is, URI.create("thisisunique"), DocumentStore.DocumentFormat.TXT);
+        assertEquals(1, this.store.search("HI").size());
+        // byte size: 12
+        is = new ByteArrayInputStream(("hello hi hix").getBytes());
+        this.store.put(is, URI.create("evenmore/unique"), DocumentStore.DocumentFormat.BINARY);
+        // byte size: 6
+        is = new ByteArrayInputStream(("hi hix").getBytes());
+        this.store.put(is, URI.create("very/unique/test"), DocumentStore.DocumentFormat.TXT);
+        // assertEquals(2, this.store.search("hello").size());
+        // System.out.println(this.store.search("hello").size());
+        this.store.setMaxDocumentBytes(1);
+        // this.store.setMaxDocumentBytes(100);
+        // assertEquals(1, this.store.search("HI").size());
+        // assertEquals(2, this.store.search("hi").size());
+    }
+
+    @Test
+    public void undoOverMaxCountTest() throws IOException{
+        this.store.setMaxDocumentBytes(1);
+        this.store.setMaxDocumentBytes(10000);
+        this.store.setMaxDocumentCount(1);
+        InputStream is = new ByteArrayInputStream(("hello heather HI his").getBytes());
+        // byte size: 20
+        this.store.put(is, URI.create("1st/doc/in/test"), DocumentStore.DocumentFormat.TXT);
+        assertEquals(1, this.store.search("HI").size());
+        // byte size: 12
+        assertTrue(this.store.delete(URI.create("1st/doc/in/test")));
+        is = new ByteArrayInputStream(("hello hi hix").getBytes());
+        this.store.put(is, URI.create("http://2nd/doc"), DocumentStore.DocumentFormat.BINARY);
+
+        // byte size: 6
+        // is = new ByteArrayInputStream(("hi hix").getBytes());
+        // this.store.put(is, URI.create("3rd/doc/test"), DocumentStore.DocumentFormat.TXT);
+        // assertEquals(2, this.store.search("hello").size());
+        // System.out.println(this.store.search("hello").size());
+        // this.store.setMaxDocumentBytes(1);
+        this.store.undo(URI.create("1st/doc/in/test"));
+    }
+
+    @Test
+    public void pushToDiskViaMaxDocCountBringBackInViaMetadataSearch() throws IOException{
+        InputStream is = new ByteArrayInputStream("myString".getBytes());
+        this.store.put(is, URI.create("test3"), DocumentStore.DocumentFormat.TXT);
+        assertEquals(this.store.setMetadata(URI.create("test3"), "not", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test3"), "not1", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test"), "key2", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test2"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test2"), "key3", "value3"), null);
+        this.store.setMaxDocumentCount(1);
+        Map<String, String> query = new HashMap<>();
+        // query.put("key", "value");
+        // List<Document> docs = new ArrayList<>(this.store.searchByMetadata(query));
+        // assertEquals(2, docs.size());
+        // assertTrue(docs.contains(this.store.get(URI.create("test"))));
+        // assertTrue(docs.contains(this.store.get(URI.create("test2"))));
+        query = new HashMap<>();
+        query.put("key3", "value3");
+        List<Document> docs = new ArrayList<>(this.store.searchByMetadata(query));
+        assertEquals(1, docs.size());
+        assertTrue(docs.contains(this.store.get(URI.create("test2"))));
+        assertTrue(fileExists(getFileName(URI.create("test"), System.getProperty("user.dir"))));
+        assertTrue(fileExists(getFileName(URI.create("test3"), System.getProperty("user.dir"))));
+    }
+
+    private String getFileName(URI key, String dir) {
+        String uri = key.toString();
+        if (uri.startsWith("http://")) {
+            uri = uri.substring(7);
+        }
+        if (!dir.endsWith(File.separator)) {
+            dir = dir + File.separator;
+        }
+        String fileName = dir + uri + ".json";
+        // System.out.println("TESTFILENAME: " + fileName);
+        return fileName;
+    }
+
+    private boolean fileExists(String fileName) {
+        File file = new File(fileName);
+        return file.isFile();
+    }
+
+    @Test
+    public void pushToDiskViaMaxBytesBringBackInViaMetadataSearch() throws IOException{
+        InputStream is = new ByteArrayInputStream("myString".getBytes());
+        this.store.put(is, URI.create("test3"), DocumentStore.DocumentFormat.BINARY);
+        assertEquals(this.store.setMetadata(URI.create("test3"), "not", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test3"), "not1", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test"), "key2", "value2"), null);
+        assertEquals(this.store.setMetadata(URI.create("test2"), "key", "value"), null);
+        assertEquals(this.store.setMetadata(URI.create("test2"), "key3", "value3"), null);
+        this.store.setMaxDocumentBytes("myString".getBytes().length+1);
+        // Thread.sleep(2000);
+        Map<String, String> query = new HashMap<>();
+        // query.put("key", "value");
+        // List<Document> docs = new ArrayList<>(this.store.searchByMetadata(query));
+        // assertEquals(2, docs.size());
+        // assertTrue(docs.contains(this.store.get(URI.create("test"))));
+        // assertTrue(docs.contains(this.store.get(URI.create("test2"))));
+        // threadSleep(1000);
+        query = new HashMap<>();
+        query.put("not", "value");
+        List<Document> docs = new ArrayList<>(this.store.searchByMetadata(query));
+        assertEquals(1, docs.size());
+        assertTrue(docs.contains(this.store.get(URI.create("test3"))));
+        assertTrue(fileExists(getFileName(URI.create("test"), System.getProperty("user.dir"))));
+        assertTrue(fileExists(getFileName(URI.create("test2"), System.getProperty("user.dir"))));
+    }
+    @Test
+    public void pushToDiskViaMaxDocCount() throws IOException{
+        //test that documents move to and from disk and memory as expected when the maxdoc count is 2
+        InputStream is = new ByteArrayInputStream("doc1".getBytes());
+        assertEquals("myString", this.store.get(URI.create("test")).getDocumentTxt());
+        assertTrue(Arrays.equals(this.store.get(URI.create("test2")).getDocumentBinaryData(), this.binaryData2));
+        this.store.put(is, URI.create("http://www.yu.edu/documents/doc1"), DocumentStore.DocumentFormat.TXT);
+        this.store.setMaxDocumentCount(2);
+        assertTrue(Arrays.equals(this.store.get(URI.create("test2")).getDocumentBinaryData(), this.binaryData2));
+        assertEquals(1, this.store.search("myString").size());
+        assertTrue(fileExists(getFileName(URI.create("http://www.yu.edu/documents/doc1"), System.getProperty("user.dir"))));
+        assertEquals("myString", this.store.get(URI.create("test")).getDocumentTxt());
+
+
+    }
+
+    @Test
+    public void pushToDiskViaMaxDocCountBringBackInViaDeleteAndSearch() throws IOException{
+        /**
+         * test that documents move to and from disk and memory as expected when the maxdoc count is reached and a doc 
+         * is pushed out to disk and then a doc is deleted and then the doc on disk has to be brought back in because 
+         * of a search
+         */
+        InputStream is = new ByteArrayInputStream("doc1".getBytes());
+        assertEquals("myString", this.store.get(URI.create("test")).getDocumentTxt());
+        assertTrue(Arrays.equals(this.store.get(URI.create("test2")).getDocumentBinaryData(), this.binaryData2));
+        this.store.put(is, URI.create("http://www.yu.edu/documents/doc1"), DocumentStore.DocumentFormat.TXT);
+        this.store.setMaxDocumentCount(2);
+        assertTrue(Arrays.equals(this.store.get(URI.create("test2")).getDocumentBinaryData(), this.binaryData2));
+        assertEquals(1, this.store.search("myString").size());
+        this.store.delete(URI.create("test"));
+        assertTrue(fileExists(getFileName(URI.create("http://www.yu.edu/documents/doc1"), System.getProperty("user.dir"))));
+        this.store.search("doc1");
+        // assertEquals("myString", this.store.get(URI.create("test")).getDocumentTxt());
+
     }
 }
